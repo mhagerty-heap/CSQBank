@@ -1,0 +1,47 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4" style="max-width: 480px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Pay a Friend</h2>
+    <a href="/friend-pay/contacts/new" class="btn btn-outline-primary btn-sm">Add a Friend</a>
+  </div>
+  <%- include('../partials/flash') %>
+  <form action="/friend-pay" method="POST">
+    <div class="mb-3">
+      <label class="form-label">Pay</label>
+      <select name="contact_code" class="form-select" required>
+        <option value="" disabled selected>Choose a friend</option>
+        <% contacts.forEach(function(c) { %>
+          <option value="<%= c.code %>"><%= c.name %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">From</label>
+      <select name="from_account_type" class="form-select" required>
+        <% accounts.forEach(function(a) { %>
+          <option value="<%= a.account_type %>"><%= a.display_label %> — $<%= a.balance.toFixed(2) %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Amount</label>
+      <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Pay Date</label>
+      <input type="date" name="pay_date" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Note (optional)</label>
+      <input type="text" name="notes" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Send Payment</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

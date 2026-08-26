@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4">
+  <%- include('../partials/flash') %>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="mb-0"><%= accountLabel %> Activity</h2>
+      <p class="text-muted mb-0"><%= account ? account.display_label : '' %> — Balance: $<%= account ? account.balance.toFixed(2) : '0.00' %></p>
+    </div>
+    <div>
+      <a href="/<%= accountType %>/deposit" class="btn btn-outline-primary btn-sm">Deposit</a>
+      <a href="/<%= accountType %>/pay-bill" class="btn btn-outline-primary btn-sm">Pay Bill</a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle bg-white">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th class="text-end">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% transactions.forEach(function(t) { %>
+          <% const isCredit = ['received','transferred_in','friend_pay_in'].includes(t.status); %>
+          <tr>
+            <td><%= t.transaction_date %></td>
+            <td><%= t.counterparty_name %><% if (t.notes) { %><div class="text-muted small"><%= t.notes %></div><% } %></td>
+            <td><span class="badge status-badge bg-light text-dark border"><%= t.status.replace('_', ' ') %></span></td>
+            <td class="text-end text-<%= isCredit ? 'success' : 'dark' %>"><%= isCredit ? '+' : '-' %>$<%= t.amount.toFixed(2) %></td>
+          </tr>
+        <% }); %>
+        <% if (!transactions.length) { %>
+          <tr><td colspan="4" class="text-center text-muted py-4">No transactions yet</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

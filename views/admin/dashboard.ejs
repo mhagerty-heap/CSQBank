@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+<div class="d-flex">
+  <% const activePage = 'dashboard' %>
+  <%- include('sidebar') %>
+  <div class="flex-grow-1 bg-light">
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Admin Dashboard</h4>
+      <span class="text-muted">Welcome, <%= currentUser.name %></span>
+    </div>
+    <div class="p-4">
+      <%- include('../partials/flash') %>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card stat-card p-3">
+            <div class="text-muted small">Total Transactions</div>
+            <div class="fs-3 fw-semibold"><%= stats.totalTransactions %></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card p-3">
+            <div class="text-muted small">Total Personas</div>
+            <div class="fs-3 fw-semibold"><%= stats.totalUsers %></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card p-3">
+            <div class="text-muted small">Open Loan Applications</div>
+            <div class="fs-3 fw-semibold"><%= stats.openLoanApplications %></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card p-3">
+            <div class="text-muted small">Decided Applications</div>
+            <div class="fs-3 fw-semibold"><%= stats.decidedLoanApplications %></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          Recent Loan Activity
+          <a href="/admin/loans" class="small">View all</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead><tr><th>Applicant</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead>
+            <tbody>
+              <% recentLoans.forEach(function(l) { %>
+                <tr>
+                  <td><%= l.applicant_email %></td>
+                  <td class="text-capitalize"><%= l.loan_type %></td>
+                  <td><span class="badge status-badge bg-secondary"><%= l.status.replace('_', ' ') %></span></td>
+                  <td><%= l.updated_at %></td>
+                </tr>
+              <% }); %>
+              <% if (!recentLoans.length) { %><tr><td colspan="4" class="text-center text-muted py-3">No loan applications yet</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1">Reset Shared Demo Data</h6>
+            <p class="text-muted small mb-0">Resets checking/savings accounts, activity, payees, and contacts. Loan applications are untouched.</p>
+          </div>
+          <form action="/admin/reset-demo-data" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Reset</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/admin-footer') %>

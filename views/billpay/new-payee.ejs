@@ -1,0 +1,16 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4" style="max-width: 480px;">
+  <h2 class="mb-4">Add a Payee</h2>
+  <%- include('../partials/flash') %>
+  <form action="/bill-pay/payees/new" method="POST">
+    <div class="mb-3">
+      <label class="form-label">Payee Name</label>
+      <input type="text" name="name" class="form-control" placeholder="e.g. City Water Utility" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Add Payee</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

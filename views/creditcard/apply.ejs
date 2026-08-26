@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4" style="max-width: 560px;">
+  <h2 class="mb-1">Credit Card Offer</h2>
+  <p class="text-muted mb-4">You're pre-approved for a CSQBank rewards card. Complete the form below to apply.</p>
+  <%- include('../partials/flash') %>
+  <form action="/credit-card-offer" method="POST">
+    <h6 class="mt-2">Personal Information</h6>
+    <div class="row g-2 mb-3">
+      <div class="col-4"><input type="text" name="first_name" class="form-control" placeholder="First name" required></div>
+      <div class="col-4"><input type="text" name="middle_name" class="form-control" placeholder="M.I."></div>
+      <div class="col-4"><input type="text" name="last_name" class="form-control" placeholder="Last name" required></div>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6"><input type="date" name="date_of_birth" class="form-control"></div>
+      <div class="col-6"><input type="tel" name="phone" class="form-control" placeholder="Phone"></div>
+    </div>
+    <div class="mb-3"><input type="email" name="email" class="form-control" placeholder="Email" value="<%= currentUser.email %>" required></div>
+
+    <h6 class="mt-4">Address</h6>
+    <div class="mb-2"><input type="text" name="street" class="form-control" placeholder="Street address" required></div>
+    <div class="row g-2 mb-3">
+      <div class="col-5"><input type="text" name="city" class="form-control" placeholder="City" required></div>
+      <div class="col-4"><input type="text" name="state" class="form-control" placeholder="State"></div>
+      <div class="col-3"><input type="text" name="zip" class="form-control" placeholder="ZIP"></div>
+    </div>
+
+    <h6 class="mt-4">Financial Information</h6>
+    <div class="mb-2">
+      <select name="residence_status" class="form-select">
+        <option value="own">Homeowner</option>
+        <option value="rent">Renter</option>
+      </select>
+    </div>
+    <div class="row g-2 mb-4">
+      <div class="col-6">
+        <label class="form-label small">Gross Monthly Income</label>
+        <input type="number" step="0.01" name="gross_monthly_income" class="form-control">
+      </div>
+      <div class="col-6">
+        <label class="form-label small">Monthly Housing Payment</label>
+        <input type="number" step="0.01" name="monthly_housing_payment" class="form-control">
+      </div>
+    </div>
+
+    <p class="small text-muted">By submitting this application, you agree to CSQBank's cardholder disclosures and terms (demo data only — this is a simulated application).</p>
+    <button type="submit" class="btn btn-primary w-100">Submit Application</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

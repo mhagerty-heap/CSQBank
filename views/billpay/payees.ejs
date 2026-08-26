@@ -1,0 +1,18 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Bill Pay Payees</h2>
+    <a href="/bill-pay/payees/new" class="btn btn-primary btn-sm">Add a Payee</a>
+  </div>
+  <%- include('../partials/flash') %>
+  <ul class="list-group bg-white">
+    <% payees.forEach(function(p) { %>
+      <li class="list-group-item"><%= p.name %></li>
+    <% }); %>
+    <% if (!payees.length) { %><li class="list-group-item text-muted">No payees yet</li><% } %>
+  </ul>
+</div>
+
+<%- include('../partials/footer') %>

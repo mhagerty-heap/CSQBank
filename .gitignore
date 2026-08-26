@@ -1,0 +1,5 @@
+node_modules/
+bank.db-shm
+bank.db-wal
+.env
+.vercel

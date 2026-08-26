@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<%
+const STATUS_COLORS = {
+  submitted: 'info', under_review: 'primary', docs_requested: 'warning',
+  docs_submitted: 'primary', approved: 'success', denied: 'danger'
+};
+%>
+<div class="d-flex">
+  <% const activePage = 'loans' %>
+  <%- include('sidebar') %>
+  <div class="flex-grow-1 bg-light">
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Loan Application #<%= loan.id %></h4>
+      <a href="/admin/loans" class="small">&larr; Back to queue</a>
+    </div>
+    <div class="p-4" style="max-width: 640px;">
+      <%- include('../partials/flash') %>
+
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h5 class="mb-1 text-capitalize"><%= loan.loan_type %> Loan — <%= loan.applicant_email %></h5>
+          <p class="text-muted mb-0">$<%= loan.requested_amount ? loan.requested_amount.toFixed(2) : '0.00' %> over <%= loan.term_months %> months</p>
+        </div>
+        <span class="badge status-badge bg-<%= STATUS_COLORS[loan.status] || 'secondary' %> fs-6"><%= loan.status.replace('_', ' ') %></span>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h6 class="mb-3">Timeline</h6>
+          <ul class="timeline mb-0">
+            <% events.forEach(function(e) { %>
+              <li>
+                <div class="fw-semibold text-capitalize"><%= e.to_status.replace('_', ' ') %></div>
+                <div class="text-muted small"><%= e.note %> &middot; <%= e.actor %></div>
+                <div class="text-muted small"><%= e.created_at %></div>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </div>
+
+      <% if (['submitted', 'under_review', 'docs_submitted'].includes(loan.status)) { %>
+        <form action="/admin/loans/<%= loan.id %>/advance" method="POST">
+          <button type="submit" class="btn btn-primary">Advance Underwriting Status</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+<%- include('../partials/admin-footer') %>

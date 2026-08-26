@@ -1,0 +1,102 @@
+<%- include('partials/head') %>
+<%- include('partials/app-nav') %>
+
+<div class="container py-4">
+  <%- include('partials/flash') %>
+  <h2 class="mb-4">Welcome, <%= currentUser.name %></h2>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card balance-card p-3 position-relative">
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-circle"><i class="bi bi-wallet2"></i></div>
+          <div>
+            <div class="text-muted small"><%= checking ? checking.display_label : 'Checking' %></div>
+            <div class="fs-3 fw-semibold">$<%= checking ? checking.balance.toFixed(2) : '0.00' %></div>
+          </div>
+        </div>
+        <a href="/checking/activity" class="stretched-link position-absolute top-0 start-0 w-100 h-100" style="z-index:1;"></a>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card balance-card p-3 position-relative">
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-circle"><i class="bi bi-piggy-bank"></i></div>
+          <div>
+            <div class="text-muted small"><%= savings ? savings.display_label : 'Savings' %></div>
+            <div class="fs-3 fw-semibold">$<%= savings ? savings.balance.toFixed(2) : '0.00' %></div>
+          </div>
+        </div>
+        <a href="/savings/activity" class="stretched-link position-absolute top-0 start-0 w-100 h-100" style="z-index:1;"></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">Recent Checking Activity</div>
+        <ul class="list-group list-group-flush">
+          <% recentChecking.forEach(function(t) { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= t.counterparty_name %></span>
+              <span class="text-<%= ['received','transferred_in','friend_pay_in'].includes(t.status) ? 'success' : 'dark' %>">
+                <%= ['received','transferred_in','friend_pay_in'].includes(t.status) ? '+' : '-' %>$<%= t.amount.toFixed(2) %>
+              </span>
+            </li>
+          <% }); %>
+          <% if (!recentChecking.length) { %><li class="list-group-item text-muted">No recent activity</li><% } %>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">Recent Savings Activity</div>
+        <ul class="list-group list-group-flush">
+          <% recentSavings.forEach(function(t) { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= t.counterparty_name %></span>
+              <span class="text-<%= ['received','transferred_in','friend_pay_in'].includes(t.status) ? 'success' : 'dark' %>">
+                <%= ['received','transferred_in','friend_pay_in'].includes(t.status) ? '+' : '-' %>$<%= t.amount.toFixed(2) %>
+              </span>
+            </li>
+          <% }); %>
+          <% if (!recentSavings.length) { %><li class="list-group-item text-muted">No recent activity</li><% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1"><i class="bi bi-credit-card text-primary"></i> Credit Card Offer</h6>
+            <p class="text-muted small mb-0">You're pre-approved for a CSQBank rewards card.</p>
+          </div>
+          <a href="/credit-card-offer" class="btn btn-outline-primary btn-sm">Apply</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1"><i class="bi bi-cash-coin text-primary"></i> Loans</h6>
+            <p class="text-muted small mb-0">
+              <% if (myLoans.length) { %>
+                You have <%= myLoans.length %> application<%= myLoans.length > 1 ? 's' : '' %> on file.
+              <% } else { %>
+                Need extra funds? Apply for a personal or auto loan.
+              <% } %>
+            </p>
+          </div>
+          <a href="/loans" class="btn btn-outline-primary btn-sm">View Loans</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

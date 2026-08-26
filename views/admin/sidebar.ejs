@@ -1,0 +1,21 @@
+<nav class="admin-sidebar p-3">
+  <a href="/" class="d-flex align-items-center gap-2 text-white text-decoration-none mb-4">
+    <img src="/images/logo.svg" height="24" alt="CSQBank logo">
+    <span class="fw-semibold">CSQBank Admin</span>
+  </a>
+  <ul class="nav nav-pills flex-column gap-1">
+    <li class="nav-item">
+      <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>" href="/admin">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'loans' ? 'active' : '' %>" href="/admin/loans">
+        <i class="bi bi-cash-coin"></i> Underwriting Queue
+      </a>
+    </li>
+    <li class="nav-item mt-3">
+      <a class="nav-link" href="/"><i class="bi bi-box-arrow-left"></i> Back to App</a>
+    </li>
+  </ul>
+</nav>

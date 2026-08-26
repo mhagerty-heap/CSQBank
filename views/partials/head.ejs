@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title + ' - CSQBank' : 'CSQBank — Online Banking' %></title>
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <% if (typeof csqTagId !== 'undefined' && csqTagId) { %>
+  <script type="text/javascript">
+  (function() {
+    window._uxa = window._uxa || [];
+    var mt = document.createElement("script");
+    mt.type = "text/javascript";
+    mt.async = true;
+    mt.src = "//t.contentsquare.net/uxa/<%= csqTagId %>.js";
+    document.getElementsByTagName("head")[0].appendChild(mt);
+  })();
+  </script>
+  <% } %>
+</head>
+<body>

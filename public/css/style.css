@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  --navy: #0b3d5c;
+  --navy-dark: #072a40;
+  --teal: #158a72;
+  --teal-dark: #106a58;
+  --dark: #1c2530;
+  --gray: #5a6674;
+  --light-gray: #f4f6f8;
+  --border: #dde3e8;
+  --white: #ffffff;
+}
+
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  color: var(--dark);
+  background-color: var(--light-gray);
+}
+
+a { text-decoration: none; }
+
+/* ---- TOP BAR (marketing) ---- */
+.top-bar {
+  background: var(--navy-dark);
+  color: #cfe0ea;
+  font-size: 0.85rem;
+  padding: 0.4rem 0;
+}
+.top-bar a { color: #cfe0ea; }
+.top-bar a:hover { color: var(--white); }
+
+/* ---- MAIN NAV ---- */
+.main-nav {
+  background: var(--navy);
+  padding: 0.75rem 0;
+}
+.main-nav .brand {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.main-nav .brand img { height: 32px; }
+.main-nav .nav-link {
+  color: #dbe7ee;
+  font-weight: 500;
+}
+.main-nav .nav-link:hover, .main-nav .nav-link.active {
+  color: var(--white);
+}
+.main-nav .btn-cta {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--white);
+  font-weight: 600;
+}
+.main-nav .btn-cta:hover {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+}
+
+/* ---- APP NAV (logged in) ---- */
+.app-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+.app-nav .brand {
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.app-nav .brand img { height: 28px; }
+.app-nav .nav-link {
+  color: var(--gray);
+  font-weight: 500;
+}
+.app-nav .nav-link:hover, .app-nav .nav-link.active {
+  color: var(--navy);
+}
+
+/* ---- HERO ---- */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+  color: var(--white);
+  padding: 5rem 0;
+}
+.hero h1 { font-weight: 700; }
+.hero .btn-cta {
+  background: var(--teal);
+  border-color: var(--teal);
+  font-weight: 600;
+}
+.hero .btn-cta:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+
+/* ---- CARDS ---- */
+.balance-card {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.balance-card .icon-circle {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--light-gray);
+  color: var(--navy);
+  font-size: 1.25rem;
+}
+.stat-card {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ---- STATUS BADGES ---- */
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35em 0.75em;
+  border-radius: 1rem;
+}
+
+/* ---- WIZARD ---- */
+.wizard-steps {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.wizard-steps .step {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+.wizard-steps .step.active {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+.wizard-steps .step.done {
+  background: var(--teal);
+  color: var(--white);
+  border-color: var(--teal);
+}
+
+/* ---- TIMELINE ---- */
+.timeline { list-style: none; padding-left: 0; }
+.timeline li {
+  position: relative;
+  padding-left: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-left: 2px solid var(--border);
+  margin-left: 0.4rem;
+}
+.timeline li:last-child { border-left-color: transparent; }
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: -0.45rem;
+  top: 0.15rem;
+  width: 0.8rem; height: 0.8rem;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+/* ---- ADMIN LAYOUT ---- */
+.admin-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: var(--navy-dark);
+}
+.admin-sidebar .nav-link { color: #b9cbd6; }
+.admin-sidebar .nav-link.active, .admin-sidebar .nav-link:hover {
+  background: var(--navy);
+  color: var(--white);
+}
+
+/* ---- FOOTER ---- */
+.site-footer {
+  background: var(--navy-dark);
+  color: #b9cbd6;
+  padding: 3rem 0 1.5rem;
+  margin-top: 3rem;
+}
+.site-footer a { color: #b9cbd6; }
+.site-footer a:hover { color: var(--white); }
+.site-footer h6 { color: var(--white); font-weight: 600; }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 2rem;
+  padding-top: 1rem;
+  font-size: 0.8rem;
+}
+.demo-disclaimer {
+  background: rgba(255,255,255,0.06);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  margin-top: 1.5rem;
+}

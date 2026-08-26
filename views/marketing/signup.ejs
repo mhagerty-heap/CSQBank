@@ -1,0 +1,26 @@
+<%- include('../partials/head') %>
+<%- include('../partials/marketing-nav') %>
+
+<div class="container py-5" style="max-width: 420px;">
+  <h1 class="mb-2 text-center">Open an Account</h1>
+  <p class="text-muted text-center small mb-4">Enter any email to instantly create a demo persona.</p>
+  <%- include('../partials/flash') %>
+  <form action="/login" method="POST">
+    <div class="mb-3">
+      <label class="form-label">Full Name</label>
+      <input type="text" name="name" class="form-control" placeholder="Optional">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" placeholder="Any password works">
+    </div>
+    <button type="submit" class="btn btn-cta w-100">Open Account</button>
+  </form>
+  <p class="text-center small mt-3 mb-0">Already have an account? <a href="/login">Log in</a></p>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,78 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <h6>CSQBank</h6>
+        <p class="small mb-0">A demo online banking experience. No real money, no real accounts.</p>
+      </div>
+      <div class="col-lg-3">
+        <h6>Company</h6>
+        <ul class="list-unstyled small">
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/features">Features</a></li>
+          <li><a href="/account-types">Account Types</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2">
+        <h6>Get Started</h6>
+        <ul class="list-unstyled small">
+          <li><a href="/signup">Open an Account</a></li>
+          <li><a href="/login">Log In</a></li>
+          <li><a href="/schedule-a-meeting">Schedule a Meeting</a></li>
+        </ul>
+      </div>
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+      <div class="col-lg-3">
+        <h6>Demo Tools</h6>
+        <ul class="list-unstyled small">
+          <li>
+            <form action="/demo/reset-data" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none" style="color: inherit;">Reset Demo Banking Data</button>
+            </form>
+          </li>
+          <li><a href="/demo/reset">Log Out &amp; Clear Session</a></li>
+        </ul>
+      </div>
+      <% } %>
+    </div>
+    <div class="demo-disclaimer">
+      <i class="bi bi-info-circle"></i> This site uses simulated data for demonstration purposes only.
+    </div>
+    <div class="footer-bottom text-center">
+      &copy; <%= new Date().getFullYear() %> CSQBank. Demo environment.
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+  // Fires identify() on any form submission carrying an email address —
+  // covers the shared login/signup form, contact form, etc. Fires
+  // regardless of success/failure, matching the "fire on intent" pattern.
+  document.addEventListener('submit', function(e) {
+    var emailInput = e.target.querySelector('input[type="email"]');
+    var email = emailInput ? emailInput.value.trim() : '';
+    if (!email) return;
+    window._uxa = window._uxa || [];
+    window._uxa.push(['identify', email]);
+    console.log('CS identify fired for email: ' + email);
+  });
+})();
+
+<% if (typeof pendingTrackEvent !== 'undefined' && pendingTrackEvent) { %>
+(function() {
+  var eventName = <%- JSON.stringify(pendingTrackEvent.name) %>;
+  var eventProps = <%- JSON.stringify(pendingTrackEvent.properties) %>;
+  window._uxa = window._uxa || [];
+  window._uxa.push(["afterPageView", function(context) {
+    if (context.pageViewType !== "n") return;
+    window._uxa.push(["trackEvent", { name: eventName, properties: eventProps }]);
+    console.log('CSQBank tracking: ' + eventName + ' fired (via _uxa)', eventProps);
+  }]);
+})();
+<% } %>
+</script>
+</body>
+</html>

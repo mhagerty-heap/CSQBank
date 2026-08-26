@@ -1,0 +1,94 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-4" style="max-width: 560px;">
+  <h2 class="mb-4 text-capitalize"><%= loan.loan_type %> Loan Application</h2>
+  <%- include('../partials/flash') %>
+
+  <div class="wizard-steps">
+    <div class="step <%= step === 1 ? 'active' : (step > 1 ? 'done' : '') %>">1. Loan Details</div>
+    <div class="step <%= step === 2 ? 'active' : (step > 2 ? 'done' : '') %>">2. Employment &amp; Income</div>
+    <div class="step <%= step === 3 ? 'active' : '' %>">3. Review &amp; Submit</div>
+  </div>
+
+  <form action="/loans/<%= loan.id %>/edit" method="POST">
+    <input type="hidden" name="step" value="<%= step %>">
+
+    <% if (step === 1) { %>
+      <div class="mb-3">
+        <label class="form-label">Loan Type</label>
+        <select name="loan_type" class="form-select">
+          <option value="personal" <%= loan.loan_type === 'personal' ? 'selected' : '' %>>Personal Loan</option>
+          <option value="auto" <%= loan.loan_type === 'auto' ? 'selected' : '' %>>Auto Loan</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Requested Amount</label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input type="number" step="100" min="500" name="requested_amount" class="form-control" value="<%= loan.requested_amount || '' %>" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Term (months)</label>
+        <select name="term_months" class="form-select" required>
+          <% [12, 24, 36, 48, 60].forEach(function(m) { %>
+            <option value="<%= m %>" <%= loan.term_months === m ? 'selected' : '' %>><%= m %> months</option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Purpose</label>
+        <input type="text" name="purpose" class="form-control" value="<%= loan.purpose || '' %>" placeholder="e.g. Debt consolidation, home repairs, vehicle purchase">
+      </div>
+    <% } else if (step === 2) { %>
+      <div class="mb-3">
+        <label class="form-label">Occupation</label>
+        <input type="text" name="occupation" class="form-control" value="<%= loan.occupation || '' %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Annual Income</label>
+        <select name="annual_income_bracket" class="form-select" required>
+          <option value="under_25k" <%= loan.annual_income_bracket === 'under_25k' ? 'selected' : '' %>>Under $25,000</option>
+          <option value="25k_50k" <%= loan.annual_income_bracket === '25k_50k' ? 'selected' : '' %>>$25,000 – $50,000</option>
+          <option value="50k_100k" <%= loan.annual_income_bracket === '50k_100k' ? 'selected' : '' %>>$50,000 – $100,000</option>
+          <option value="over_100k" <%= loan.annual_income_bracket === 'over_100k' ? 'selected' : '' %>>Over $100,000</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Net Worth</label>
+        <select name="net_worth_bracket" class="form-select" required>
+          <option value="under_10k" <%= loan.net_worth_bracket === 'under_10k' ? 'selected' : '' %>>Under $10,000</option>
+          <option value="10k_100k" <%= loan.net_worth_bracket === '10k_100k' ? 'selected' : '' %>>$10,000 – $100,000</option>
+          <option value="over_100k" <%= loan.net_worth_bracket === 'over_100k' ? 'selected' : '' %>>Over $100,000</option>
+        </select>
+      </div>
+    <% } else { %>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-6 text-muted">Loan Type</dt><dd class="col-6 text-capitalize"><%= loan.loan_type %></dd>
+            <dt class="col-6 text-muted">Requested Amount</dt><dd class="col-6">$<%= loan.requested_amount ? loan.requested_amount.toFixed(2) : '0.00' %></dd>
+            <dt class="col-6 text-muted">Term</dt><dd class="col-6"><%= loan.term_months %> months</dd>
+            <dt class="col-6 text-muted">Purpose</dt><dd class="col-6"><%= loan.purpose || '—' %></dd>
+            <dt class="col-6 text-muted">Occupation</dt><dd class="col-6"><%= loan.occupation %></dd>
+            <dt class="col-6 text-muted">Annual Income</dt><dd class="col-6"><%= loan.annual_income_bracket %></dd>
+            <dt class="col-6 text-muted">Net Worth</dt><dd class="col-6"><%= loan.net_worth_bracket %></dd>
+          </dl>
+        </div>
+      </div>
+      <p class="small text-muted">By submitting, you authorize CSQBank to review this simulated application for underwriting (demo data only).</p>
+    <% } %>
+
+    <div class="d-flex justify-content-between mt-4">
+      <% if (step > 1) { %>
+        <a href="/loans/<%= loan.id %>/edit?step=<%= step - 1 %>" class="btn btn-outline-secondary">Back</a>
+      <% } else { %>
+        <span></span>
+      <% } %>
+      <button type="submit" class="btn btn-primary"><%= step === 3 ? 'Submit Application' : 'Continue' %></button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

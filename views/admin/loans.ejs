@@ -1,0 +1,51 @@
+<%- include('../partials/head') %>
+<%
+const STATUS_COLORS = {
+  draft: 'secondary', submitted: 'info', under_review: 'primary',
+  docs_requested: 'warning', docs_submitted: 'primary',
+  approved: 'success', denied: 'danger'
+};
+%>
+<div class="d-flex">
+  <% const activePage = 'loans' %>
+  <%- include('sidebar') %>
+  <div class="flex-grow-1 bg-light">
+    <div class="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Underwriting Queue</h4>
+      <span class="text-muted">Welcome, <%= currentUser.name %></span>
+    </div>
+    <div class="p-4">
+      <%- include('../partials/flash') %>
+      <div class="table-responsive">
+        <table class="table table-hover bg-white align-middle">
+          <thead>
+            <tr><th>Applicant</th><th>Type</th><th>Amount</th><th>Status</th><th>Updated</th><th></th></tr>
+          </thead>
+          <tbody>
+            <% applications.forEach(function(a) { %>
+              <tr>
+                <td><%= a.applicant_email %></td>
+                <td class="text-capitalize"><%= a.loan_type %></td>
+                <td><%= a.requested_amount ? '$' + a.requested_amount.toFixed(2) : '—' %></td>
+                <td><span class="badge status-badge bg-<%= STATUS_COLORS[a.status] || 'secondary' %>"><%= a.status.replace('_', ' ') %></span></td>
+                <td><%= a.updated_at %></td>
+                <td>
+                  <a href="/admin/loans/<%= a.id %>" class="btn btn-sm btn-outline-primary">View</a>
+                  <% if (['submitted', 'under_review', 'docs_submitted'].includes(a.status)) { %>
+                    <form action="/admin/loans/<%= a.id %>/advance" method="POST" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-primary">Advance</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+            <% if (!applications.length) { %>
+              <tr><td colspan="6" class="text-center text-muted py-4">No loan applications yet</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/admin-footer') %>
