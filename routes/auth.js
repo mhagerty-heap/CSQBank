@@ -31,13 +31,14 @@ router.post('/login', (req, res) => {
   if (!user) {
     const name = (req.body.name || '').trim() || email.split('@')[0];
     const result = db.prepare('INSERT INTO users (email, name) VALUES (?, ?)').run(email, name);
-    user = { id: result.lastInsertRowid, email, name };
+    user = { id: result.lastInsertRowid, email, name, role: 'customer' };
     req.flash('success', `Welcome, ${name}! Your account is ready.`);
   } else {
     req.flash('success', `Welcome back, ${user.name}!`);
   }
 
   req.session.userId = user.id;
+  req.session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
   const returnTo = req.session.returnTo || '/';
   delete req.session.returnTo;
   res.redirect(returnTo);
