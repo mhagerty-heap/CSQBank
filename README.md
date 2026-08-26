@@ -1,6 +1,6 @@
 # CSQBank — Contentsquare Demo Online Banking Site
 
-This is a demo online banking site built to showcase [Contentsquare](https://contentsquare.com) analytics features including Session Replay, Zoning Analysis, Journey Analysis, and Form Analytics. It's a server-rendered Express + EJS app covering everyday banking (checking, savings, transfers, bill pay, person-to-person payments) plus a multi-step loan application and underwriting flow.
+This is a demo online banking site built to showcase [Contentsquare](https://contentsquare.com) analytics features including Session Replay, Zoning Analysis, Journey Analysis, and Form Analytics. It's a server-rendered Express + EJS app covering everyday banking (checking, savings, transfers, bill pay, person-to-person payments) plus a multi-step loan application and underwriting flow.  
 
 ---
 
