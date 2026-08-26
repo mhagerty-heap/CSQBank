@@ -6,13 +6,29 @@ const { queueTrackEvent } = require('../lib/trackEvent');
 
 router.use(requireLogin);
 
+// Caches the full loan row in the session cookie (client-side, so it
+// survives a switch to a different serverless instance) after every
+// create/read/mutation, so loadOwnLoan can recreate the row locally below
+// if this instance's ephemeral copy of the DB never saw the original write.
+function cacheLoan(req, loan) {
+  req.session.loanCache = req.session.loanCache || {};
+  req.session.loanCache[loan.id] = loan;
+}
+
 function loadOwnLoan(req, res, next) {
-  const loan = loans.getById(req.params.id);
+  let loan = loans.getById(req.params.id);
+
+  if (!loan && req.session.loanCache && req.session.loanCache[req.params.id]) {
+    loans.recreate(req.session.loanCache[req.params.id]);
+    loan = loans.getById(req.params.id);
+  }
+
   if (!loan || loan.user_id !== req.session.userId) {
     req.flash('error', 'Loan application not found');
     return res.redirect('/loans');
   }
   req.loan = loan;
+  cacheLoan(req, loan);
   next();
 }
 
@@ -27,12 +43,29 @@ function fireTransitionEvent(req, transition) {
 }
 
 router.get('/', (req, res) => {
-  res.render('loans/index', { title: 'My Loans', applications: loans.listForUser(req.session.userId) });
+  let applications = loans.listForUser(req.session.userId);
+
+  // Same cross-instance recreation as loadOwnLoan — fold in any of the
+  // user's own loans this instance's DB copy hasn't seen yet.
+  const seen = new Set(applications.map(l => l.id));
+  const cached = req.session.loanCache || {};
+  let recreatedAny = false;
+  Object.values(cached).forEach(loan => {
+    if (loan.user_id === req.session.userId && !seen.has(loan.id)) {
+      loans.recreate(loan);
+      seen.add(loan.id);
+      recreatedAny = true;
+    }
+  });
+  if (recreatedAny) applications = loans.listForUser(req.session.userId);
+
+  res.render('loans/index', { title: 'My Loans', applications });
 });
 
 router.get('/new', (req, res) => {
   const loanType = req.query.loan_type === 'auto' ? 'auto' : 'personal';
   const id = loans.createDraft(req.session.userId, loanType);
+  cacheLoan(req, loans.getById(id));
   queueTrackEvent(req, 'Loan Application Started', { loanType });
   res.redirect(`/loans/${id}/edit?step=1`);
 });
@@ -53,6 +86,7 @@ router.post('/:id/edit', loadOwnLoan, (req, res) => {
       purpose: req.body.purpose || null,
       current_step: 2,
     });
+    cacheLoan(req, loans.getById(req.loan.id));
     return res.redirect(`/loans/${req.loan.id}/edit?step=2`);
   }
 
@@ -63,11 +97,13 @@ router.post('/:id/edit', loadOwnLoan, (req, res) => {
       net_worth_bracket: req.body.net_worth_bracket || null,
       current_step: 3,
     });
+    cacheLoan(req, loans.getById(req.loan.id));
     return res.redirect(`/loans/${req.loan.id}/edit?step=3`);
   }
 
   // step 3: review & submit
   loans.submit(req.loan);
+  cacheLoan(req, loans.getById(req.loan.id));
   queueTrackEvent(req, 'Loan Application Submitted', {
     loanId: req.loan.id,
     loanType: req.loan.loan_type,
@@ -83,6 +119,7 @@ router.get('/:id', loadOwnLoan, (req, res) => {
 
 router.post('/:id/advance', loadOwnLoan, (req, res) => {
   const transition = loans.advance(req.loan, 'applicant');
+  cacheLoan(req, loans.getById(req.loan.id));
   fireTransitionEvent(req, transition);
   if (!transition) req.flash('info', 'This application cannot be advanced right now.');
   res.redirect(`/loans/${req.loan.id}`);
@@ -90,6 +127,7 @@ router.post('/:id/advance', loadOwnLoan, (req, res) => {
 
 router.post('/:id/respond-docs', loadOwnLoan, (req, res) => {
   const transition = loans.respondToDocs(req.loan, 'applicant');
+  cacheLoan(req, loans.getById(req.loan.id));
   if (transition) {
     queueTrackEvent(req, 'Loan Underwriting Stage Changed', transition);
     req.flash('success', 'Documents submitted for review.');
