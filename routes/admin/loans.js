@@ -5,26 +5,38 @@ const loans = require('../../lib/loans');
 
 router.use(requireLogin, requireAdmin);
 
-router.get('/', (req, res) => {
-  res.render('admin/loans', { title: 'Underwriting Queue', activePage: 'loans', applications: loans.listAll() });
+router.get('/', async (req, res, next) => {
+  try {
+    res.render('admin/loans', { title: 'Underwriting Queue', activePage: 'loans', applications: await loans.listAll() });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/:id', (req, res) => {
-  const loan = loans.getById(req.params.id);
-  if (!loan) {
-    req.flash('error', 'Loan application not found');
-    return res.redirect('/admin/loans');
+router.get('/:id', async (req, res, next) => {
+  try {
+    const loan = await loans.getById(req.params.id);
+    if (!loan) {
+      req.flash('error', 'Loan application not found');
+      return res.redirect('/admin/loans');
+    }
+    res.render('admin/loan-detail', { title: 'Loan Application', activePage: 'loans', loan, events: await loans.listEvents(loan.id) });
+  } catch (err) {
+    next(err);
   }
-  res.render('admin/loan-detail', { title: 'Loan Application', activePage: 'loans', loan, events: loans.listEvents(loan.id) });
 });
 
-router.post('/:id/advance', (req, res) => {
-  const loan = loans.getById(req.params.id);
-  if (loan) {
-    const transition = loans.advance(loan, 'underwriting_sim');
-    if (!transition) req.flash('info', 'This application cannot be advanced right now.');
+router.post('/:id/advance', async (req, res, next) => {
+  try {
+    const loan = await loans.getById(req.params.id);
+    if (loan) {
+      const transition = await loans.advance(loan, 'underwriting_sim');
+      if (!transition) req.flash('info', 'This application cannot be advanced right now.');
+    }
+    res.redirect(`/admin/loans/${req.params.id}`);
+  } catch (err) {
+    next(err);
   }
-  res.redirect(`/admin/loans/${req.params.id}`);
 });
 
 module.exports = router;

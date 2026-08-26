@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.userId) {
@@ -16,34 +16,20 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-function loadUser(req, res, next) {
-  if (req.session.userId) {
-    let user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-
-    // On serverless platforms (Vercel), each instance gets its own ephemeral
-    // copy of bank.db (see config/database.js) — a user created on one
-    // instance won't exist on another. The session cookie itself carries
-    // enough identity to recreate that row locally, so login state survives
-    // the switch and later FK-dependent writes (e.g. loan applications)
-    // still succeed.
-    if (!user && req.session.user) {
-      const cached = req.session.user;
-      db.prepare('INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)')
-        .run(cached.id, cached.email, cached.name, cached.role);
-      user = cached;
-    }
-
-    if (user) {
+async function loadUser(req, res, next) {
+  try {
+    if (req.session.userId) {
+      const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+      const user = rows[0] || null;
       res.locals.currentUser = user;
-      req.session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
+      if (!user) req.session.userId = null;
     } else {
       res.locals.currentUser = null;
-      req.session.userId = null;
     }
-  } else {
-    res.locals.currentUser = null;
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 }
 
 module.exports = { requireLogin, requireAdmin, loadUser };

@@ -1,33 +1,19 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+require('dotenv').config();
+const { Pool } = require('pg');
 
-// Vercel's filesystem is read-only except /tmp.
-// Copy the bundled bank.db there on cold start so writes work.
-let dbPath;
-if (process.env.VERCEL) {
-  const tmpPath = '/tmp/bank.db';
-  if (!fs.existsSync(tmpPath)) {
-    fs.copyFileSync(path.join(__dirname, '..', 'bank.db'), tmpPath);
-  }
-  dbPath = tmpPath;
-} else {
-  dbPath = path.join(__dirname, '..', 'bank.db');
-}
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-const db = new Database(dbPath);
-
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-db.exec(`
+const SCHEMA_SQL = `
   -- Identity. No password column: login is intentionally frictionless (see routes/auth.js).
   CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'customer',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   -- Shared/global demo accounts. Not owned by a user_id on purpose: every
@@ -35,7 +21,7 @@ db.exec(`
   -- the old app's per-browser sessionStorage behavior rather than real
   -- per-customer data. Only loan_applications below is genuinely per-identity.
   CREATE TABLE IF NOT EXISTS accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     account_type TEXT NOT NULL,
     display_label TEXT NOT NULL,
     account_number TEXT NOT NULL,
@@ -45,7 +31,7 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     transaction_number INTEGER UNIQUE NOT NULL,
     account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
     counterparty_name TEXT NOT NULL,
@@ -56,23 +42,23 @@ db.exec(`
     counterparty_account_number TEXT,
     counterparty_routing_number TEXT,
     related_transaction_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS bill_pay_payees (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS friend_pay_contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS credit_card_applications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     first_name TEXT NOT NULL,
     middle_name TEXT,
     last_name TEXT NOT NULL,
@@ -87,12 +73,12 @@ db.exec(`
     residence_status TEXT,
     gross_monthly_income REAL,
     monthly_housing_payment REAL,
-    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   -- The one genuinely per-identity, persisted-over-time entity.
   CREATE TABLE IF NOT EXISTS loan_applications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     loan_type TEXT NOT NULL DEFAULT 'personal',
     requested_amount REAL,
@@ -105,21 +91,36 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'draft',
     decision_note TEXT,
     apr REAL,
-    submitted_at DATETIME,
-    decided_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    submitted_at TIMESTAMPTZ,
+    decided_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS loan_application_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     loan_application_id INTEGER NOT NULL REFERENCES loan_applications(id) ON DELETE CASCADE,
     from_status TEXT,
     to_status TEXT NOT NULL,
     actor TEXT NOT NULL DEFAULT 'system',
     note TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
-`);
 
-module.exports = db;
+  CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
+  CREATE INDEX IF NOT EXISTS idx_loans_user ON loan_applications(user_id);
+  CREATE INDEX IF NOT EXISTS idx_loan_events_loan ON loan_application_events(loan_application_id);
+`;
+
+// Cached so the CREATE TABLE statements only actually run once per warm
+// process, but every cold start still guarantees the schema exists before
+// any query runs.
+let schemaReady = null;
+function ensureSchema() {
+  if (!schemaReady) {
+    schemaReady = pool.query(SCHEMA_SQL);
+  }
+  return schemaReady;
+}
+
+module.exports = { pool, ensureSchema };

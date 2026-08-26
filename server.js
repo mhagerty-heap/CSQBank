@@ -5,9 +5,7 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
 
-// Init DB (runs schema creation)
-require('./config/database');
-
+const { ensureSchema } = require('./config/database');
 const { loadUser } = require('./middleware/auth');
 const injectLocals = require('./middleware/locals');
 
@@ -44,6 +42,18 @@ app.use((req, res, next) => {
 
 app.use(flash());
 
+// Cached in config/database.js so this only actually runs the CREATE TABLE
+// statements once per warm process — every cold start still guarantees the
+// schema exists before any query below runs.
+app.use(async (req, res, next) => {
+  try {
+    await ensureSchema();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(loadUser);
 app.use(injectLocals);
 
@@ -70,11 +80,15 @@ app.get('/demo/reset', (req, res) => {
 // banking sandbox back to its seeded state is a convenience for whoever is
 // running a demo, not a privileged operation. Loan applications, which are
 // genuinely per-identity, are untouched.
-app.post('/demo/reset-data', (req, res) => {
+app.post('/demo/reset-data', async (req, res, next) => {
   if (!req.session.userId) return res.redirect('/login');
-  require('./lib/resetDemoData').resetSharedBankingData();
-  req.flash('success', 'Shared banking data has been reset.');
-  res.redirect(req.get('Referer') || '/');
+  try {
+    await require('./lib/resetDemoData').resetSharedBankingData();
+    req.flash('success', 'Shared banking data has been reset.');
+    res.redirect(req.get('Referer') || '/');
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.use((req, res) => {

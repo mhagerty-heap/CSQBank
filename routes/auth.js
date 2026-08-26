@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 router.get('/login', (req, res) => {
   if (req.session.userId) return res.redirect('/');
@@ -20,28 +20,34 @@ router.get('/signup', (req, res) => {
 // tradeoff, not an oversight, so SCs can run a live demo without needing to
 // remember or share credentials, and can demo Heap identify() with any
 // email typed on the spot.
-router.post('/login', (req, res) => {
-  const email = (req.body.email || '').trim().toLowerCase();
-  if (!email) {
-    req.flash('error', 'Please enter an email address');
-    return res.redirect(req.get('Referer') || '/login');
-  }
+router.post('/login', async (req, res, next) => {
+  try {
+    const email = (req.body.email || '').trim().toLowerCase();
+    if (!email) {
+      req.flash('error', 'Please enter an email address');
+      return res.redirect(req.get('Referer') || '/login');
+    }
 
-  let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user) {
-    const name = (req.body.name || '').trim() || email.split('@')[0];
-    const result = db.prepare('INSERT INTO users (email, name) VALUES (?, ?)').run(email, name);
-    user = { id: result.lastInsertRowid, email, name, role: 'customer' };
-    req.flash('success', `Welcome, ${name}! Your account is ready.`);
-  } else {
-    req.flash('success', `Welcome back, ${user.name}!`);
-  }
+    let user = (await pool.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
+    if (!user) {
+      const name = (req.body.name || '').trim() || email.split('@')[0];
+      const result = await pool.query(
+        'INSERT INTO users (email, name) VALUES ($1, $2) RETURNING *',
+        [email, name]
+      );
+      user = result.rows[0];
+      req.flash('success', `Welcome, ${name}! Your account is ready.`);
+    } else {
+      req.flash('success', `Welcome back, ${user.name}!`);
+    }
 
-  req.session.userId = user.id;
-  req.session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
-  const returnTo = req.session.returnTo || '/';
-  delete req.session.returnTo;
-  res.redirect(returnTo);
+    req.session.userId = user.id;
+    const returnTo = req.session.returnTo || '/';
+    delete req.session.returnTo;
+    res.redirect(returnTo);
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post('/logout', (req, res) => {
