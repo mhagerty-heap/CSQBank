@@ -67,6 +67,7 @@ app.use('/bill-pay', require('./routes/billpay'));
 app.use('/friend-pay', require('./routes/friendpay'));
 app.use('/credit-card-offer', require('./routes/creditcard'));
 app.use('/loans', require('./routes/loans'));
+app.use('/api', require('./routes/demoErrors'));
 app.use('/admin/loans', require('./routes/admin/loans'));
 app.use('/admin', require('./routes/admin/index'));
 

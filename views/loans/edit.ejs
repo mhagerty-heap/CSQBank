@@ -17,7 +17,7 @@
     <% if (step === 1) { %>
       <div class="mb-3">
         <label class="form-label">Loan Type</label>
-        <select name="loan_type" class="form-select">
+        <select name="loan_type" id="loan-loan-type" class="form-select">
           <option value="personal" <%= loan.loan_type === 'personal' ? 'selected' : '' %>>Personal Loan</option>
           <option value="auto" <%= loan.loan_type === 'auto' ? 'selected' : '' %>>Auto Loan</option>
         </select>
@@ -26,12 +26,12 @@
         <label class="form-label">Requested Amount</label>
         <div class="input-group">
           <span class="input-group-text">$</span>
-          <input type="number" step="100" min="500" name="requested_amount" class="form-control" value="<%= loan.requested_amount || '' %>" required>
+          <input type="number" step="100" min="500" name="requested_amount" id="loan-requested-amount" class="form-control" value="<%= loan.requested_amount || '' %>" required>
         </div>
       </div>
       <div class="mb-3">
         <label class="form-label">Term (months)</label>
-        <select name="term_months" class="form-select" required>
+        <select name="term_months" id="loan-term-months" class="form-select" required>
           <% [12, 24, 36, 48, 60].forEach(function(m) { %>
             <option value="<%= m %>" <%= loan.term_months === m ? 'selected' : '' %>><%= m %> months</option>
           <% }); %>
@@ -39,16 +39,16 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Purpose</label>
-        <input type="text" name="purpose" class="form-control" value="<%= loan.purpose || '' %>" placeholder="e.g. Debt consolidation, home repairs, vehicle purchase">
+        <input type="text" name="purpose" id="loan-purpose" class="form-control" value="<%= loan.purpose || '' %>" placeholder="e.g. Debt consolidation, home repairs, vehicle purchase">
       </div>
     <% } else if (step === 2) { %>
       <div class="mb-3">
         <label class="form-label">Occupation</label>
-        <input type="text" name="occupation" class="form-control" value="<%= loan.occupation || '' %>" required>
+        <input type="text" name="occupation" id="loan-occupation" class="form-control" value="<%= loan.occupation || '' %>" required>
       </div>
       <div class="mb-3">
         <label class="form-label">Annual Income</label>
-        <select name="annual_income_bracket" class="form-select" required>
+        <select name="annual_income_bracket" id="loan-income-bracket" class="form-select" required>
           <option value="under_25k" <%= loan.annual_income_bracket === 'under_25k' ? 'selected' : '' %>>Under $25,000</option>
           <option value="25k_50k" <%= loan.annual_income_bracket === '25k_50k' ? 'selected' : '' %>>$25,000 – $50,000</option>
           <option value="50k_100k" <%= loan.annual_income_bracket === '50k_100k' ? 'selected' : '' %>>$50,000 – $100,000</option>
@@ -57,7 +57,7 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Net Worth</label>
-        <select name="net_worth_bracket" class="form-select" required>
+        <select name="net_worth_bracket" id="loan-net-worth-bracket" class="form-select" required>
           <option value="under_10k" <%= loan.net_worth_bracket === 'under_10k' ? 'selected' : '' %>>Under $10,000</option>
           <option value="10k_100k" <%= loan.net_worth_bracket === '10k_100k' ? 'selected' : '' %>>$10,000 – $100,000</option>
           <option value="over_100k" <%= loan.net_worth_bracket === 'over_100k' ? 'selected' : '' %>>Over $100,000</option>
@@ -82,11 +82,11 @@
 
     <div class="d-flex justify-content-between mt-4">
       <% if (step > 1) { %>
-        <a href="/loans/<%= loan.id %>/edit?step=<%= step - 1 %>" class="btn btn-outline-secondary">Back</a>
+        <a href="/loans/<%= loan.id %>/edit?step=<%= step - 1 %>" id="loan-back-btn" class="btn btn-outline-secondary">Back</a>
       <% } else { %>
         <span></span>
       <% } %>
-      <button type="submit" class="btn btn-primary"><%= step === 3 ? 'Submit Application' : 'Continue' %></button>
+      <button type="submit" id="loan-submit-btn" class="btn btn-primary"><%= step === 3 ? 'Submit Application' : 'Continue' %></button>
     </div>
   </form>
 </div>

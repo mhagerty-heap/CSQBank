@@ -1,6 +1,6 @@
 <nav class="app-nav navbar navbar-expand-lg">
   <div class="container">
-    <a class="brand" href="/">
+    <a class="brand" id="main-logo" href="/">
       <img src="/images/logo.svg" alt="CSQBank logo">
       CSQBank
     </a>
@@ -9,37 +9,37 @@
     </button>
     <div class="collapse navbar-collapse" id="appNavCollapse">
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" id="nav-dashboard" href="/">Dashboard</a></li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Checking</a>
+          <a class="nav-link dropdown-toggle" id="nav-cat-checking" href="#" data-bs-toggle="dropdown">Checking</a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="/checking/activity">Activity</a></li>
-            <li><a class="dropdown-item" href="/checking/deposit">Deposit</a></li>
-            <li><a class="dropdown-item" href="/checking/pay-bill">Pay Bill</a></li>
+            <li><a class="dropdown-item" id="nav-checking-activity" href="/checking/activity">Activity</a></li>
+            <li><a class="dropdown-item" id="nav-checking-deposit" href="/checking/deposit">Deposit</a></li>
+            <li><a class="dropdown-item" id="nav-checking-pay-bill" href="/checking/pay-bill">Pay Bill</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Savings</a>
+          <a class="nav-link dropdown-toggle" id="nav-cat-savings" href="#" data-bs-toggle="dropdown">Savings</a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="/savings/activity">Activity</a></li>
-            <li><a class="dropdown-item" href="/savings/deposit">Deposit</a></li>
-            <li><a class="dropdown-item" href="/savings/pay-bill">Pay Bill</a></li>
+            <li><a class="dropdown-item" id="nav-savings-activity" href="/savings/activity">Activity</a></li>
+            <li><a class="dropdown-item" id="nav-savings-deposit" href="/savings/deposit">Deposit</a></li>
+            <li><a class="dropdown-item" id="nav-savings-pay-bill" href="/savings/pay-bill">Pay Bill</a></li>
           </ul>
         </li>
-        <li class="nav-item"><a class="nav-link" href="/transfer">Transfers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/friend-pay">Pay a Friend</a></li>
-        <li class="nav-item"><a class="nav-link" href="/loans">Loans</a></li>
+        <li class="nav-item"><a class="nav-link" id="nav-cat-transfer" href="/transfer">Transfers</a></li>
+        <li class="nav-item"><a class="nav-link" id="nav-cat-friendpay" href="/friend-pay">Pay a Friend</a></li>
+        <li class="nav-item"><a class="nav-link" id="nav-cat-loans" href="/loans">Loans</a></li>
         <% if (currentUser && currentUser.role === 'admin') { %>
-          <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
+          <li class="nav-item"><a class="nav-link" id="nav-admin" href="/admin">Admin</a></li>
         <% } %>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" id="nav-user-menu" href="#" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle"></i> <%= currentUser.name %>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
               <form action="/logout" method="POST">
-                <button type="submit" class="dropdown-item">Log Out</button>
+                <button type="submit" id="nav-logout-btn" class="dropdown-item">Log Out</button>
               </form>
             </li>
           </ul>

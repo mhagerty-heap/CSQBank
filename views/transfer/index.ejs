@@ -7,7 +7,7 @@
   <form action="/transfer" method="POST">
     <div class="mb-3">
       <label class="form-label">From</label>
-      <select name="from_account_type" class="form-select" required>
+      <select name="from_account_type" id="transfer-from-account" class="form-select" required>
         <% accounts.forEach(function(a) { %>
           <option value="<%= a.account_type %>"><%= a.display_label %> — $<%= a.balance.toFixed(2) %></option>
         <% }); %>
@@ -15,7 +15,7 @@
     </div>
     <div class="mb-3">
       <label class="form-label">To</label>
-      <select name="to_account_type" class="form-select" required>
+      <select name="to_account_type" id="transfer-to-account" class="form-select" required>
         <% accounts.forEach(function(a) { %>
           <option value="<%= a.account_type %>"><%= a.display_label %> — $<%= a.balance.toFixed(2) %></option>
         <% }); %>
@@ -25,10 +25,10 @@
       <label class="form-label">Amount</label>
       <div class="input-group">
         <span class="input-group-text">$</span>
-        <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
+        <input type="number" step="0.01" min="0.01" name="amount" id="transfer-amount" class="form-control" required>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary w-100">Transfer Funds</button>
+    <button type="submit" id="transfer-submit" class="btn btn-primary w-100">Transfer Funds</button>
   </form>
 </div>
 

@@ -5,14 +5,14 @@
       <% if (typeof currentUser !== 'undefined' && currentUser) { %>
         <a href="/">Go to My Dashboard</a>
       <% } else { %>
-        <a href="/login">Log In</a> &nbsp;|&nbsp; <a href="/signup">Open an Account</a>
+        <a href="/login" id="topbar-login-link">Log In</a> &nbsp;|&nbsp; <a href="/signup" id="topbar-signup-link">Open an Account</a>
       <% } %>
     </span>
   </div>
 </div>
 <nav class="main-nav navbar navbar-expand-lg navbar-dark">
   <div class="container">
-    <a class="brand" href="/">
+    <a class="brand" id="marketing-logo" href="/">
       <img src="/images/logo.svg" alt="CSQBank logo">
       CSQBank
     </a>
@@ -21,13 +21,13 @@
     </button>
     <div class="collapse navbar-collapse" id="marketingNavCollapse">
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-        <li class="nav-item"><a class="nav-link" href="/features">Features</a></li>
-        <li class="nav-item"><a class="nav-link" href="/account-types">Account Types</a></li>
-        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
-        <li class="nav-item"><a class="nav-link" href="/schedule-a-meeting">Schedule a Meeting</a></li>
+        <li class="nav-item"><a class="nav-link" id="marketing-nav-about" href="/about">About</a></li>
+        <li class="nav-item"><a class="nav-link" id="marketing-nav-features" href="/features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" id="marketing-nav-account-types" href="/account-types">Account Types</a></li>
+        <li class="nav-item"><a class="nav-link" id="marketing-nav-contact" href="/contact">Contact</a></li>
+        <li class="nav-item"><a class="nav-link" id="marketing-nav-schedule" href="/schedule-a-meeting">Schedule a Meeting</a></li>
         <li class="nav-item">
-          <a class="btn btn-cta btn-sm px-3" href="/signup">Open an Account</a>
+          <a class="btn btn-cta btn-sm px-3" id="marketing-nav-signup-cta" href="/signup">Open an Account</a>
         </li>
       </ul>
     </div>

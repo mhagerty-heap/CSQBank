@@ -7,7 +7,7 @@
 
   <div class="row g-4">
     <div class="col-md-6">
-      <div class="card balance-card p-3 position-relative">
+      <div class="card balance-card p-3 position-relative" id="dashboard-checking-card">
         <div class="d-flex align-items-center gap-3">
           <div class="icon-circle"><i class="bi bi-wallet2"></i></div>
           <div>
@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="col-md-6">
-      <div class="card balance-card p-3 position-relative">
+      <div class="card balance-card p-3 position-relative" id="dashboard-savings-card">
         <div class="d-flex align-items-center gap-3">
           <div class="icon-circle"><i class="bi bi-piggy-bank"></i></div>
           <div>
@@ -75,7 +75,7 @@
             <h6 class="mb-1"><i class="bi bi-credit-card text-primary"></i> Credit Card Offer</h6>
             <p class="text-muted small mb-0">You're pre-approved for a CSQBank rewards card.</p>
           </div>
-          <a href="/credit-card-offer" class="btn btn-outline-primary btn-sm">Apply</a>
+          <a href="/credit-card-offer" id="dashboard-credit-card-cta" class="btn btn-outline-primary btn-sm">Apply</a>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@
               <% } %>
             </p>
           </div>
-          <a href="/loans" class="btn btn-outline-primary btn-sm">View Loans</a>
+          <a href="/loans" id="dashboard-loans-cta" class="btn btn-outline-primary btn-sm">View Loans</a>
         </div>
       </div>
     </div>

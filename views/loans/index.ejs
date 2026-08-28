@@ -13,10 +13,10 @@ const STATUS_COLORS = {
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">My Loans</h2>
     <div class="dropdown">
-      <button class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Start New Application</button>
+      <button class="btn btn-primary btn-sm dropdown-toggle" id="loan-new-dropdown-toggle" data-bs-toggle="dropdown">Start New Application</button>
       <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="/loans/new?loan_type=personal">Personal Loan</a></li>
-        <li><a class="dropdown-item" href="/loans/new?loan_type=auto">Auto Loan</a></li>
+        <li><a class="dropdown-item" id="loan-new-personal" href="/loans/new?loan_type=personal">Personal Loan</a></li>
+        <li><a class="dropdown-item" id="loan-new-auto" href="/loans/new?loan_type=auto">Auto Loan</a></li>
       </ul>
     </div>
   </div>
@@ -37,9 +37,9 @@ const STATUS_COLORS = {
             <td><%= a.updated_at %></td>
             <td>
               <% if (a.status === 'draft') { %>
-                <a href="/loans/<%= a.id %>/edit?step=<%= a.current_step %>" class="btn btn-sm btn-outline-primary">Continue</a>
+                <a href="/loans/<%= a.id %>/edit?step=<%= a.current_step %>" id="loan-continue-<%= a.id %>" class="btn btn-sm btn-outline-primary">Continue</a>
               <% } else { %>
-                <a href="/loans/<%= a.id %>" class="btn btn-sm btn-outline-primary">View</a>
+                <a href="/loans/<%= a.id %>" id="loan-view-<%= a.id %>" class="btn btn-sm btn-outline-primary">View</a>
               <% } %>
             </td>
           </tr>
