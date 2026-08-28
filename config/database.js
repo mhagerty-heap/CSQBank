@@ -16,10 +16,11 @@ const SCHEMA_SQL = `
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  -- Shared/global demo accounts. Not owned by a user_id on purpose: every
-  -- persona sees the same checking/savings accounts and activity, mirroring
-  -- the old app's per-browser sessionStorage behavior rather than real
-  -- per-customer data. Only loan_applications below is genuinely per-identity.
+  -- Shared, read-only demo baseline. Not owned by a user_id on purpose: this
+  -- is the starting point every session sees, not real per-customer data.
+  -- Runtime activity (transfers, bill pay, etc.) never writes here — it
+  -- lives in each session's own overlay instead (see lib/banking.js). Only
+  -- loan_applications below is genuinely per-identity and Postgres-backed.
   CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL PRIMARY KEY,
     account_type TEXT NOT NULL,

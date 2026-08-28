@@ -65,21 +65,24 @@ UA_POOL = [
 # ---------------------------------------------------------------------------
 # [INIT] Path selection — weighted
 #
-#   Path 1 – Signup & Onboarding              weight 20 (~20%)
-#   Path 2 – Happy Path Everyday Banking       weight 30 (~30%)
-#   Path 3 – Frustrated Transfer (API Error)   weight 20 (~20%)
+#   Path 1 – Signup & Onboarding              weight 25 (~25%)
+#   Path 2 – Happy Path Everyday Banking       weight 35 (~35%)
+#   Path 3 – Frustrated Transfer (API Error)   weight 25 (~25%)
 #   Path 4 – Bill Pay Form Friction            weight 15 (~15%)
-#   Path 5 – Loan Funnel Drop-off              weight 15 (~15%)
+#
+# Loan applications are handled entirely by the separate
+# csBankLoanApplicationFunnel_CSQXP.py script — see its module comment for
+# why loans need their own stable-identity persona pool and cleanup pass,
+# which doesn't fit this script's one-off-persona-per-run model.
 # ---------------------------------------------------------------------------
-PATH_WEIGHTS = [20, 30, 20, 15, 15]
+PATH_WEIGHTS = [25, 35, 25, 15]
 PATH_NAMES = [
     "Signup & Onboarding",
     "Happy Path Everyday Banking",
     "Frustrated Transfer (API Error)",
     "Bill Pay Form Friction",
-    "Loan Funnel Drop-off",
 ]
-population = list(range(1, 6))
+population = list(range(1, 5))
 selectedPath = random.choices(population, weights=PATH_WEIGHTS, k=1)[0]
 if os.environ.get("CSQBANK_FORCE_PATH"):
     selectedPath = int(os.environ["CSQBANK_FORCE_PATH"])
@@ -99,10 +102,6 @@ customerFirstName = customerNameArray[0]
 customerLastName = customerNameArray[-1]
 customerEmailOriginal = persona["customerEmail"]
 customerPassword = persona["customerPassword"]
-customerOccupation = persona["customerOccupation"]
-customerAnnualIncomeBracket = persona["customerAnnualIncomeBracket"]
-customerNetWorthBracket = persona["customerNetWorthBracket"]
-customerAccountTenureMonths = persona["customerAccountTenureMonths"]
 
 if isReturningUser:
     customerEmail = customerEmailOriginal.lower().strip()
@@ -727,91 +726,6 @@ def pay_bill_form_friction():
 
 
 # ---------------------------------------------------------------------------
-# Loan Funnel Drop-off (Path 5)
-# ---------------------------------------------------------------------------
-def loan_funnel_dropoff():
-    loanType = random.choice(["personal", "auto"])
-    driver.get(siteBaseUrl + "/loans")
-    time.sleep(random.uniform(2, 3))
-
-    open_dropdown_and_click(
-        "loan-new-dropdown-toggle",
-        "loan-new-personal" if loanType == "personal" else "loan-new-auto",
-        wait_after=(3, 5),
-    )
-    cs_event("LoanApplicationStarted")
-    log("MAIN", "Started " + loanType + " loan application")
-
-    # Step 1 — Loan Details
-    amountField = find_clickable("loan-requested-amount")
-    scroll_to(amountField)
-    hover_click(amountField, wait_after=0.3)
-    requestedAmount = random.choice([2500, 5000, 10000, 15000, 25000])
-    amountField.send_keys(str(requestedAmount))
-    wait(0.5, 1.0)
-
-    Select(find_clickable("loan-term-months")).select_by_value(str(random.choice([24, 36, 48, 60])))
-    wait(0.4, 0.8)
-
-    purposeField = find_clickable("loan-purpose")
-    hover_click(purposeField, wait_after=0.3)
-    purposeField.send_keys(random.choice(
-        ["Debt consolidation", "Home repairs", "Vehicle purchase", "Medical expenses"]
-    ))
-    wait(0.6, 1.2)
-
-    hover_click(find_clickable("loan-submit-btn"), wait_after=random.uniform(2, 3))
-    log("MAIN", "Step 1 complete — advanced to Employment & Income")
-
-    # Step 2 — Employment & Income (hesitation signals live here)
-    occupationField = find_clickable("loan-occupation")
-    scroll_to(occupationField)
-    hover_click(occupationField, wait_after=0.3)
-    occupationField.send_keys(customerOccupation)
-    wait(0.6, 1.2)
-
-    excessive_hover("loan-income-bracket", count=5, hover_ms=500)
-    Select(find_clickable("loan-income-bracket")).select_by_value(customerAnnualIncomeBracket)
-    wait(0.5, 1.0)
-
-    Select(find_clickable("loan-net-worth-bracket")).select_by_value(customerNetWorthBracket)
-    wait(0.6, 1.2)
-
-    if random.random() < 0.5:
-        hover_click(find_clickable("loan-back-btn"), wait_after=random.uniform(2, 3))
-        log("MAIN", "User navigated back to Step 1 (hesitation)")
-        time.sleep(random.uniform(1.5, 2.5))
-        hover_click(find_clickable("loan-submit-btn"), wait_after=random.uniform(2, 3))
-        log("MAIN", "User returned to Step 2")
-
-    if random.random() < 0.45:
-        cs_event("LoanApplicationAbandoned")
-        cs_var("formAbandonStep", "employment_income")
-        cs_var("sessionOutcome", "abandoned_step2")
-        log("MAIN", "User abandoned the loan application at Step 2 (income/employment)")
-        return "abandoned_step2"
-
-    hover_click(find_clickable("loan-submit-btn"), wait_after=random.uniform(2, 3))
-    log("MAIN", "Step 2 complete — advanced to Review & Submit")
-
-    # Step 3 — Review & Submit
-    if random.random() < 0.7:
-        submitBtn = find_clickable("loan-submit-btn")
-        scroll_to(submitBtn)
-        hover_click(submitBtn, wait_after=random.uniform(3, 5))
-        cs_event("LoanApplicationSubmitted")
-        cs_var("sessionOutcome", "submitted")
-        log("MAIN", "Loan application submitted")
-        return "submitted"
-    else:
-        cs_event("LoanApplicationAbandoned")
-        cs_var("formAbandonStep", "review_submit")
-        cs_var("sessionOutcome", "abandoned_step3")
-        log("MAIN", "User abandoned at the final review step")
-        return "abandoned_step3"
-
-
-# ---------------------------------------------------------------------------
 # [MAIN]
 # ---------------------------------------------------------------------------
 sessionOutcome = "unknown"
@@ -850,17 +764,11 @@ try:
         simulate_app_nav_hover()
         sessionOutcome = make_transfer_frustrated()
 
-    elif selectedPath == 4:
+    else:  # selectedPath == 4
         login_via_topbar_or_direct()
         confirm_dashboard()
         simulate_app_nav_hover()
         sessionOutcome = pay_bill_form_friction()
-
-    else:  # selectedPath == 5
-        login_via_topbar_or_direct()
-        confirm_dashboard()
-        simulate_app_nav_hover()
-        sessionOutcome = loan_funnel_dropoff()
 
     maybe_logout()
 

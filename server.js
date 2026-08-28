@@ -77,19 +77,16 @@ app.get('/demo/reset', (req, res) => {
   res.redirect('/');
 });
 
-// Open to any logged-in user (not just admins) — resetting the shared demo
-// banking sandbox back to its seeded state is a convenience for whoever is
-// running a demo, not a privileged operation. Loan applications, which are
-// genuinely per-identity, are untouched.
-app.post('/demo/reset-data', async (req, res, next) => {
+// Everyday banking activity (checking/savings, bill pay, friend pay) lives
+// as a per-session overlay (see lib/banking.js) on top of a shared,
+// read-only Postgres baseline, so "reset" just clears this session's own
+// overlay rather than touching any shared state. Loan applications, which
+// are genuinely per-identity, are untouched.
+app.post('/demo/reset-data', (req, res) => {
   if (!req.session.userId) return res.redirect('/login');
-  try {
-    await require('./lib/resetDemoData').resetSharedBankingData();
-    req.flash('success', 'Shared banking data has been reset.');
-    res.redirect(req.get('Referer') || '/');
-  } catch (err) {
-    next(err);
-  }
+  req.session.bankingOverlay = null;
+  req.flash('success', 'Your banking activity has been reset to the starting state.');
+  res.redirect(req.get('Referer') || '/');
 });
 
 app.use((req, res) => {

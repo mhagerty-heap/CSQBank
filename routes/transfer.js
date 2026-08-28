@@ -8,7 +8,7 @@ router.use(requireLogin);
 
 router.get('/', async (req, res, next) => {
   try {
-    res.render('transfer/index', { title: 'Make a Transfer', accounts: await banking.listAccounts() });
+    res.render('transfer/index', { title: 'Make a Transfer', accounts: await banking.listAccounts(req) });
   } catch (err) {
     next(err);
   }
@@ -24,23 +24,18 @@ router.post('/', async (req, res, next) => {
       return res.redirect('/transfer');
     }
 
-    const fromAccount = await banking.getAccountByType(from_account_type);
-    const toAccount = await banking.getAccountByType(to_account_type);
+    const fromAccount = await banking.getAccountByType(req, from_account_type);
+    const toAccount = await banking.getAccountByType(req, to_account_type);
 
-    const outId = await banking.postTransaction(fromAccount.id, {
+    banking.postTransaction(req, from_account_type, {
       counterpartyName: toAccount.display_label,
       amount,
       status: 'transferred_out',
-      counterpartyAccountNumber: toAccount.account_number,
-      counterpartyRoutingNumber: toAccount.routing_number,
     });
-    await banking.postTransaction(toAccount.id, {
+    banking.postTransaction(req, to_account_type, {
       counterpartyName: fromAccount.display_label,
       amount,
       status: 'transferred_in',
-      counterpartyAccountNumber: fromAccount.account_number,
-      counterpartyRoutingNumber: fromAccount.routing_number,
-      relatedTransactionId: outId,
     });
 
     queueTrackEvent(req, 'Transfer Completed', { fromAccountType: from_account_type, toAccountType: to_account_type, amount });

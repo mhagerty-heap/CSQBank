@@ -46,7 +46,7 @@ const STATUS_COLORS = {
         <h6>Documents Requested</h6>
         <p class="text-muted small">Our underwriting team has requested proof of income. In this demo, just confirm you've "submitted" it.</p>
         <form action="/loans/<%= loan.id %>/respond-docs" method="POST">
-          <button type="submit" class="btn btn-warning">I've Submitted My Documents</button>
+          <button type="submit" id="loan-respond-docs-btn" class="btn btn-warning">I've Submitted My Documents</button>
         </form>
       </div>
     </div>
@@ -58,7 +58,7 @@ const STATUS_COLORS = {
         <h6>Demo Control</h6>
         <p class="text-muted small">In production, underwriting updates happen behind the scenes over several days. For this demo, advance the status yourself.</p>
         <form action="/loans/<%= loan.id %>/advance" method="POST">
-          <button type="submit" class="btn btn-primary">Advance Underwriting Status</button>
+          <button type="submit" id="loan-advance-btn" class="btn btn-primary">Advance Underwriting Status</button>
         </form>
       </div>
     </div>

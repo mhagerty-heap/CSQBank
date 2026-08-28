@@ -7,7 +7,7 @@ router.use(requireLogin);
 
 router.get('/payees', async (req, res, next) => {
   try {
-    res.render('billpay/payees', { title: 'Bill Pay Payees', payees: await banking.listBillPayPayees() });
+    res.render('billpay/payees', { title: 'Bill Pay Payees', payees: await banking.listBillPayPayees(req) });
   } catch (err) {
     next(err);
   }
@@ -17,7 +17,7 @@ router.get('/payees/new', (req, res) => {
   res.render('billpay/new-payee', { title: 'Add a Payee' });
 });
 
-router.post('/payees/new', async (req, res, next) => {
+router.post('/payees/new', (req, res, next) => {
   try {
     const name = (req.body.name || '').trim();
     if (!name) {
@@ -25,7 +25,7 @@ router.post('/payees/new', async (req, res, next) => {
       return res.redirect('/bill-pay/payees/new');
     }
     const code = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-    await banking.addBillPayPayee(name, code);
+    banking.addBillPayPayee(req, name, code);
     req.flash('success', `${name} added to your payees.`);
     res.redirect('/bill-pay/payees');
   } catch (err) {

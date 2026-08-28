@@ -20,13 +20,28 @@ async function loadOwnLoan(req, res, next) {
   }
 }
 
-function fireTransitionEvent(req, transition) {
+// Fires on the *applicant's own* next page load (the redirect right after
+// this POST) via the queueTrackEvent/pendingTrackEvent mechanism. The
+// underwriting "Advance" button on the applicant's own loan page (see
+// views/loans/detail.ejs's "Demo Control" panel) stands in for underwriting
+// work that would really happen behind the scenes over several days, so
+// this is tagged as a bank-initiated action even though the applicant's own
+// browser session is what's making the request.
+function fireTransitionEvent(req, res, transition) {
   if (!transition) return;
-  queueTrackEvent(req, 'Loan Underwriting Stage Changed', { fromStatus: transition.fromStatus, toStatus: transition.toStatus });
+  const applicantEmail = res.locals.currentUser && res.locals.currentUser.email;
+  const baseProps = {
+    actor: 'bank',
+    loanId: req.loan.id,
+    applicantEmail,
+    fromStatus: transition.fromStatus,
+    toStatus: transition.toStatus,
+  };
+  queueTrackEvent(req, 'Loan Underwriting Stage Changed', baseProps);
   if (transition.toStatus === 'approved') {
-    queueTrackEvent(req, 'Loan Application Approved', { loanId: req.loan.id });
+    queueTrackEvent(req, 'Loan Application Approved', baseProps);
   } else if (transition.toStatus === 'denied') {
-    queueTrackEvent(req, 'Loan Application Denied', { loanId: req.loan.id });
+    queueTrackEvent(req, 'Loan Application Denied', baseProps);
   }
 }
 
@@ -103,8 +118,8 @@ router.get('/:id', loadOwnLoan, async (req, res, next) => {
 
 router.post('/:id/advance', loadOwnLoan, async (req, res, next) => {
   try {
-    const transition = await loans.advance(req.loan, 'applicant');
-    fireTransitionEvent(req, transition);
+    const transition = await loans.advance(req.loan, 'bank_system');
+    fireTransitionEvent(req, res, transition);
     if (!transition) req.flash('info', 'This application cannot be advanced right now.');
     res.redirect(`/loans/${req.loan.id}`);
   } catch (err) {

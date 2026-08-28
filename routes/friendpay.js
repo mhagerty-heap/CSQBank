@@ -9,8 +9,8 @@ router.use(requireLogin);
 router.get('/', async (req, res, next) => {
   try {
     const [contacts, accounts] = await Promise.all([
-      banking.listFriendPayContacts(),
-      banking.listAccounts(),
+      banking.listFriendPayContacts(req),
+      banking.listAccounts(req),
     ]);
     res.render('friendpay/index', { title: 'Pay a Friend', contacts, accounts });
   } catch (err) {
@@ -20,9 +20,9 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const contacts = await banking.listFriendPayContacts();
+    const contacts = await banking.listFriendPayContacts(req);
     const contact = contacts.find(c => c.code === req.body.contact_code);
-    const account = await banking.getAccountByType(req.body.from_account_type);
+    const account = await banking.getAccountByType(req, req.body.from_account_type);
     const amount = parseFloat(req.body.amount);
 
     if (!contact || !account || !amount || amount <= 0) {
@@ -30,7 +30,7 @@ router.post('/', async (req, res, next) => {
       return res.redirect('/friend-pay');
     }
 
-    await banking.postTransaction(account.id, {
+    banking.postTransaction(req, account.account_type, {
       counterpartyName: contact.name,
       amount,
       status: 'friend_pay_out',
@@ -50,7 +50,7 @@ router.get('/contacts/new', (req, res) => {
   res.render('friendpay/new-contact', { title: 'Add a Friend' });
 });
 
-router.post('/contacts/new', async (req, res, next) => {
+router.post('/contacts/new', (req, res, next) => {
   try {
     const name = (req.body.name || '').trim();
     if (!name) {
@@ -58,7 +58,7 @@ router.post('/contacts/new', async (req, res, next) => {
       return res.redirect('/friend-pay/contacts/new');
     }
     const code = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-    await banking.addFriendPayContact(name, code);
+    banking.addFriendPayContact(req, name, code);
     req.flash('success', `${name} added to your friends.`);
     res.redirect('/friend-pay');
   } catch (err) {

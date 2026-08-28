@@ -108,18 +108,20 @@ heapBank2/
 
 ## Demo data model
 
-- **Shared banking sandbox** — checking/savings accounts, transactions, bill pay payees, and friend pay contacts are global, not per-user (every persona sees the same activity). This mirrors a shared demo environment rather than real per-customer data, so any number of people can log in with different emails during a live demo and see a consistent story.
-- **Loan applications are the one per-identity, persisted entity** — each user's loan applications belong to them and survive a data reset.
+- **Per-session banking overlay** — checking/savings balances, transactions, bill pay payees, and friend pay contacts are a shared, read-only seeded baseline (see `npm run seed`) plus whatever *this session itself* has added on top, tracked in the session cookie (`lib/banking.js`). Every session — a live demo login or an automated script — starts from the identical baseline; nothing one session adds is ever visible to any other session, so concurrent demos never interfere with each other.
+- **Loan applications are the one per-identity, persisted entity** — each user's loan applications live in Postgres, belong to them, and survive both kinds of reset below.
 
 ### Resetting demo data
 
-Two different resets exist, for two different situations:
+Three different resets exist, for three different situations:
 
 | Action | Effect |
 |--------|--------|
 | `GET /demo/reset` | Clears just the current session (logs you out) — handy for typing a fresh email at `/login` without clearing cookies manually. |
-| `POST /demo/reset-data` (any logged-in user), or the **Reset Demo Data** button in `/admin` | Re-seeds the shared banking sandbox — accounts, transactions, payees, contacts — back to a clean state. Loan applications are untouched. |
-| `npm run seed` | Same shared-sandbox reset, run from the command line (e.g. before redeploying). |
+| `POST /demo/reset-data` (the **Reset Demo Banking Data** link in the footer, any logged-in user) | Clears *your own session's* banking overlay back to the shared starting point. Doesn't touch the shared baseline or anyone else's session. |
+| `POST /admin/reset-demo-data` (the **Reset Demo Data** button in `/admin`), or `npm run seed` | Re-seeds the shared, read-only banking baseline itself (accounts, transactions, payees, contacts) — e.g. to refresh its dates. Every session's own overlay keeps layering on top of the refreshed baseline. |
+
+Loan applications are untouched by all three.
 
 ## Loan / underwriting flow
 
