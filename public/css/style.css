@@ -185,6 +185,35 @@ a { text-decoration: none; }
   color: var(--white);
 }
 
+/* ---- TRUST STRIP ---- */
+.trust-strip {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 0;
+}
+
+/* ---- SAVINGS OFFER ---- */
+.savings-offer {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+  color: var(--white);
+  padding: 5rem 0;
+}
+.savings-offer h2 { font-weight: 700; }
+.savings-offer-badge {
+  background: var(--teal);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+}
+.savings-offer .btn-cta {
+  background: var(--teal);
+  border-color: var(--teal);
+  font-weight: 600;
+}
+.savings-offer .btn-cta:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+
 /* ---- FOOTER ---- */
 .site-footer {
   background: var(--navy-dark);
