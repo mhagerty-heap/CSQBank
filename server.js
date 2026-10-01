@@ -5,7 +5,7 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
 
-const { ensureSchema, warmDb } = require('./config/database');
+const { pool, ensureSchema, warmDb } = require('./config/database');
 const { loadUser } = require('./middleware/auth');
 const injectLocals = require('./middleware/locals');
 
@@ -45,6 +45,7 @@ app.use(flash());
 // injectLocals needs no DB (tag ID, flash, one-shot track event), so it runs
 // first and the pages below can render without ever touching Neon.
 app.use(injectLocals);
+app.use((req, res, next) => { req.startedAt = Date.now(); next(); });
 
 // Logged-out visitors on the marketing pages never need the database, so
 // those requests skip it entirely. Neon scales to zero when idle and a cold
@@ -77,6 +78,20 @@ app.use(async (req, res, next) => {
   try {
     await ensureSchema();
     loadUser(req, res, next);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Warm-up for automation (e.g. Selenium) to call before a run. Deliberately
+// NOT in DB_FREE_*, and runs its own query (ensureSchema is memoized, so on a
+// warm Lambda it would not touch Neon). A 200 means the Lambda is warm and
+// Neon's compute is awake. Not a browser page, so it fires no CSQ tag.
+app.get('/warm', async (req, res, next) => {
+  try {
+    await pool.query('SELECT 1');
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, db: 'ready', ms: Date.now() - req.startedAt });
   } catch (err) {
     next(err);
   }
