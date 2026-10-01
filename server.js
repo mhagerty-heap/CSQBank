@@ -5,7 +5,7 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
 
-const { ensureSchema } = require('./config/database');
+const { ensureSchema, warmDb } = require('./config/database');
 const { loadUser } = require('./middleware/auth');
 const injectLocals = require('./middleware/locals');
 
@@ -42,20 +42,45 @@ app.use((req, res, next) => {
 
 app.use(flash());
 
-// Cached in config/database.js so this only actually runs the CREATE TABLE
-// statements once per warm process — every cold start still guarantees the
-// schema exists before any query below runs.
+// injectLocals needs no DB (tag ID, flash, one-shot track event), so it runs
+// first and the pages below can render without ever touching Neon.
+app.use(injectLocals);
+
+// Logged-out visitors on the marketing pages never need the database, so
+// those requests skip it entirely. Neon scales to zero when idle and a cold
+// wake-up can take seconds; blocking the HTML on it delays the CSQ tag
+// (which lives in the HTML). Instead we kick off a non-blocking wake-up so
+// the DB is usually warm by the time the visitor reaches /login.
+const DB_FREE_GET = new Set([
+  '/', '/about', '/features', '/account-types', '/contact',
+  '/schedule-a-meeting', '/login', '/signup',
+]);
+const DB_FREE_POST = new Set(['/contact', '/schedule-a-meeting']);
+
+app.use((req, res, next) => {
+  const anonymous = !req.session.userId;
+  const dbFree = (req.method === 'GET' && DB_FREE_GET.has(req.path)) ||
+                 (req.method === 'POST' && DB_FREE_POST.has(req.path));
+  if (anonymous && dbFree) {
+    res.locals.currentUser = null;
+    warmDb();
+    return next();
+  }
+  next();
+});
+
+// Everything else (login submit, any logged-in page) needs the DB. Cached in
+// config/database.js so the CREATE TABLE statements only run once per warm
+// process; every cold start still guarantees the schema exists first.
 app.use(async (req, res, next) => {
+  if (res.locals.currentUser === null && !req.session.userId) return next();
   try {
     await ensureSchema();
-    next();
+    loadUser(req, res, next);
   } catch (err) {
     next(err);
   }
 });
-
-app.use(loadUser);
-app.use(injectLocals);
 
 app.use('/', require('./routes/marketing'));
 app.use('/', require('./routes/auth'));

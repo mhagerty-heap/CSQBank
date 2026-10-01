@@ -119,9 +119,25 @@ const SCHEMA_SQL = `
 let schemaReady = null;
 function ensureSchema() {
   if (!schemaReady) {
-    schemaReady = pool.query(SCHEMA_SQL);
+    // Don't cache a failure (e.g. a Neon cold-start timeout) — retry next call.
+    schemaReady = pool.query(SCHEMA_SQL).catch(err => {
+      schemaReady = null;
+      throw err;
+    });
   }
   return schemaReady;
 }
 
-module.exports = { pool, ensureSchema };
+// Fire-and-forget wake-up for Neon's scale-to-zero compute. Called from
+// DB-free pages (marketing) so the database is already warm by the time a
+// visitor reaches login. Never awaited and never throws; throttled so a
+// burst of page views sends one wake-up, not many.
+let lastWarm = 0;
+function warmDb() {
+  const now = Date.now();
+  if (now - lastWarm < 60 * 1000) return;
+  lastWarm = now;
+  ensureSchema().catch(() => {});
+}
+
+module.exports = { pool, ensureSchema, warmDb };
