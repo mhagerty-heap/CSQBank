@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
 
 router.get('/login', (req, res) => {
-  if (req.session.userId) return res.redirect('/');
+  if (req.session.user) return res.redirect('/');
   res.render('marketing/login', { title: 'Log In' });
 });
 
 router.get('/signup', (req, res) => {
-  if (req.session.userId) return res.redirect('/');
+  if (req.session.user) return res.redirect('/');
   res.render('marketing/signup', { title: 'Open an Account' });
 });
 
@@ -20,7 +19,7 @@ router.get('/signup', (req, res) => {
 // tradeoff, not an oversight, so SCs can run a live demo without needing to
 // remember or share credentials, and can demo Heap identify() with any
 // email typed on the spot.
-router.post('/login', async (req, res, next) => {
+router.post('/login', (req, res, next) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
     if (!email) {
@@ -28,20 +27,9 @@ router.post('/login', async (req, res, next) => {
       return res.redirect(req.get('Referer') || '/login');
     }
 
-    let user = (await pool.query('SELECT * FROM users WHERE email = $1', [email])).rows[0];
-    if (!user) {
-      const name = (req.body.name || '').trim() || email.split('@')[0];
-      const result = await pool.query(
-        'INSERT INTO users (email, name) VALUES ($1, $2) RETURNING *',
-        [email, name]
-      );
-      user = result.rows[0];
-      req.flash('success', `Welcome, ${name}! Your account is ready.`);
-    } else {
-      req.flash('success', `Welcome back, ${user.name}!`);
-    }
-
-    req.session.userId = user.id;
+    const name = (req.body.name || '').trim() || email.split('@')[0];
+    req.session.user = { email, name };
+    req.flash('success', `Welcome, ${name}!`);
     const returnTo = req.session.returnTo || '/';
     delete req.session.returnTo;
     res.redirect(returnTo);

@@ -5,7 +5,7 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
 
-const { pool, ensureSchema, warmDb } = require('./config/database');
+const { pool, ensureSchema } = require('./config/database');
 const { loadUser } = require('./middleware/auth');
 const injectLocals = require('./middleware/locals');
 
@@ -42,54 +42,22 @@ app.use((req, res, next) => {
 
 app.use(flash());
 
-// injectLocals needs no DB (tag ID, flash, one-shot track event), so it runs
-// first and the pages below can render without ever touching Neon.
 app.use(injectLocals);
 app.use((req, res, next) => { req.startedAt = Date.now(); next(); });
 
-// Logged-out visitors on the marketing pages never need the database, so
-// those requests skip it entirely. Neon scales to zero when idle and a cold
-// wake-up can take seconds; blocking the HTML on it delays the CSQ tag
-// (which lives in the HTML). Instead we kick off a non-blocking wake-up so
-// the DB is usually warm by the time the visitor reaches /login.
-const DB_FREE_GET = new Set([
-  '/', '/about', '/features', '/account-types', '/contact',
-  '/schedule-a-meeting', '/login', '/signup',
-]);
-const DB_FREE_POST = new Set(['/contact', '/schedule-a-meeting']);
+// Identity comes from the session cookie, so nothing outside /loans touches
+// Postgres. Neon's compute stays asleep for marketing pages, login, and all
+// everyday banking pages.
+app.use(loadUser);
 
-app.use((req, res, next) => {
-  const anonymous = !req.session.userId;
-  const dbFree = (req.method === 'GET' && DB_FREE_GET.has(req.path)) ||
-                 (req.method === 'POST' && DB_FREE_POST.has(req.path));
-  if (anonymous && dbFree) {
-    res.locals.currentUser = null;
-    warmDb();
-    return next();
-  }
-  next();
-});
-
-// Everything else (login submit, any logged-in page) needs the DB. Cached in
-// config/database.js so the CREATE TABLE statements only run once per warm
-// process; every cold start still guarantees the schema exists first.
-app.use(async (req, res, next) => {
-  if (res.locals.currentUser === null && !req.session.userId) return next();
-  try {
-    await ensureSchema();
-    loadUser(req, res, next);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Warm-up for automation (e.g. Selenium) to call before a run. Deliberately
-// NOT in DB_FREE_*, and runs its own query (ensureSchema is memoized, so on a
-// warm Lambda it would not touch Neon). A 200 means the Lambda is warm and
-// Neon's compute is awake. Not a browser page, so it fires no CSQ tag.
+// Warm-up for automation (e.g. Selenium) to call before a loan run. Runs its
+// own query (ensureSchema is memoized, so on a warm Lambda it would not touch
+// Neon). A 200 means the Lambda is warm and Neon's compute is awake. Not a
+// browser page, so it fires no CSQ tag.
 app.get('/warm', async (req, res, next) => {
   try {
     await pool.query('SELECT 1');
+    await ensureSchema();
     res.set('Cache-Control', 'no-store');
     res.json({ ok: true, db: 'ready', ms: Date.now() - req.startedAt });
   } catch (err) {
@@ -108,8 +76,6 @@ app.use('/friend-pay', require('./routes/friendpay'));
 app.use('/credit-card-offer', require('./routes/creditcard'));
 app.use('/loans', require('./routes/loans'));
 app.use('/api', require('./routes/demoErrors'));
-app.use('/admin/loans', require('./routes/admin/loans'));
-app.use('/admin', require('./routes/admin/index'));
 
 // Demo reset — clears the session so a fresh email can be typed at /login
 app.get('/demo/reset', (req, res) => {
@@ -119,11 +85,11 @@ app.get('/demo/reset', (req, res) => {
 
 // Everyday banking activity (checking/savings, bill pay, friend pay) lives
 // as a per-session overlay (see lib/banking.js) on top of a shared,
-// read-only Postgres baseline, so "reset" just clears this session's own
-// overlay rather than touching any shared state. Loan applications, which
-// are genuinely per-identity, are untouched.
+// read-only baseline bundled in code (lib/baseline.js), so "reset" just clears
+// this session's own overlay rather than touching any shared state. Loans,
+// which live in Postgres, are untouched.
 app.post('/demo/reset-data', (req, res) => {
-  if (!req.session.userId) return res.redirect('/login');
+  if (!req.session.user) return res.redirect('/login');
   req.session.bankingOverlay = null;
   req.flash('success', 'Your banking activity has been reset to the starting state.');
   res.redirect(req.get('Referer') || '/');
@@ -141,7 +107,6 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`CSQBank2 running at http://localhost:${PORT}`);
-    console.log(`Admin: http://localhost:${PORT}/admin`);
   });
 }
 

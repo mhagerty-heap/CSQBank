@@ -1,15 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const { requireLogin } = require('../middleware/auth');
+const { ensureSchema } = require('../config/database');
 const loans = require('../lib/loans');
 const { queueTrackEvent } = require('../lib/trackEvent');
 
 router.use(requireLogin);
 
+// Postgres is only needed for loans, so the schema is guaranteed here (once
+// per warm process) rather than for every request in the app.
+router.use(async (req, res, next) => {
+  try {
+    await ensureSchema();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 async function loadOwnLoan(req, res, next) {
   try {
     const loan = await loans.getById(req.params.id);
-    if (!loan || loan.user_id !== req.session.userId) {
+    if (!loan || loan.user_email !== req.session.user.email) {
       req.flash('error', 'Loan application not found');
       return res.redirect('/loans');
     }
@@ -29,7 +41,7 @@ async function loadOwnLoan(req, res, next) {
 // browser session is what's making the request.
 function fireTransitionEvent(req, res, transition) {
   if (!transition) return;
-  const applicantEmail = res.locals.currentUser && res.locals.currentUser.email;
+  const applicantEmail = req.session.user.email;
   const baseProps = {
     actor: 'bank',
     loanId: req.loan.id,
@@ -47,7 +59,7 @@ function fireTransitionEvent(req, res, transition) {
 
 router.get('/', async (req, res, next) => {
   try {
-    res.render('loans/index', { title: 'My Loans', applications: await loans.listForUser(req.session.userId) });
+    res.render('loans/index', { title: 'My Loans', applications: await loans.listForUser(req.session.user.email) });
   } catch (err) {
     next(err);
   }
@@ -56,7 +68,7 @@ router.get('/', async (req, res, next) => {
 router.get('/new', async (req, res, next) => {
   try {
     const loanType = req.query.loan_type === 'auto' ? 'auto' : 'personal';
-    const id = await loans.createDraft(req.session.userId, loanType);
+    const id = await loans.createDraft(req.session.user.email, req.session.user.name, loanType);
     queueTrackEvent(req, 'Loan Application Started', { loanType });
     res.redirect(`/loans/${id}/edit?step=1`);
   } catch (err) {

@@ -1,7 +1,7 @@
-const { pool } = require('../config/database');
-
+// Identity lives entirely in the signed session cookie (req.session.user =
+// { email, name }); there is no users table and no database lookup here.
 function requireLogin(req, res, next) {
-  if (!req.session.userId) {
+  if (!req.session.user) {
     req.flash('error', 'Please log in to continue');
     req.session.returnTo = req.originalUrl;
     return res.redirect('/login');
@@ -9,27 +9,9 @@ function requireLogin(req, res, next) {
   next();
 }
 
-function requireAdmin(req, res, next) {
-  if (!res.locals.currentUser || res.locals.currentUser.role !== 'admin') {
-    return res.status(403).render('error', { title: 'Forbidden', message: 'Access denied. Admin only.', status: 403 });
-  }
+function loadUser(req, res, next) {
+  res.locals.currentUser = req.session.user || null;
   next();
 }
 
-async function loadUser(req, res, next) {
-  try {
-    if (req.session.userId) {
-      const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.userId]);
-      const user = rows[0] || null;
-      res.locals.currentUser = user;
-      if (!user) req.session.userId = null;
-    } else {
-      res.locals.currentUser = null;
-    }
-    next();
-  } catch (err) {
-    next(err);
-  }
-}
-
-module.exports = { requireLogin, requireAdmin, loadUser };
+module.exports = { requireLogin, loadUser };

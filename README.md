@@ -21,7 +21,7 @@ Follow the prompts (link or create a project, accept the defaults — `vercel.js
 > ```
 > Replace `<your-org>/<your-repo>` with the real path once it exists.
 
-The database is Postgres (e.g. [Neon](https://neon.tech)) rather than a bundled file, so every serverless instance shares the same data — create a project with your provider, grab its connection string, and set it as `DATABASE_URL`. The schema is created automatically on first request (see `ensureSchema()` in `config/database.js`); run `npm run seed` once (locally, pointed at that same `DATABASE_URL`) to load the shared demo banking sandbox.
+Loan applications are stored in Postgres (e.g. [Neon](https://neon.tech)) rather than a bundled file, so every serverless instance shares the same data — create a project with your provider, grab its connection string, and set it as `DATABASE_URL`. The loan tables are created automatically the first time anyone visits `/loans` (see `ensureSchema()` in `config/database.js`). Nothing else in the app touches the database, so a scale-to-zero host like Neon stays asleep unless someone is in the loan flow.
 
 ---
 
@@ -29,7 +29,7 @@ The database is Postgres (e.g. [Neon](https://neon.tech)) rather than a bundled 
 
 | Variable | Required? | Description |
 |----------|-----------|--------------|
-| `DATABASE_URL` | **Required** | Postgres connection string (Neon, Vercel Postgres, or any Postgres host). The schema auto-creates on first request; run `npm run seed` once to populate demo data. |
+| `DATABASE_URL` | **Required** | Postgres connection string (Neon, Vercel Postgres, or any Postgres host). Only the loan flow uses it; the loan tables auto-create on the first `/loans` visit. The rest of the site works without it. |
 | `CSQ_TAG_ID` | Optional | Your Contentsquare tag ID — e.g. if your tag script is `12345645.js`, enter `12345645`. Without it, the site runs fine but the CSQ tag never loads (no tracking). |
 
 Set these in Vercel under **Project Settings → Environment Variables**, or in a local `.env` file when running locally (copy `.env.example` to `.env`).
@@ -54,14 +54,7 @@ Set these in Vercel under **Project Settings → Environment Variables**, or in 
 
    Create a Postgres database (e.g. a free [Neon](https://neon.tech) project), copy `.env.example` to `.env`, and set `DATABASE_URL` to its connection string.
 
-3. **Seed the database**
-
-   Creates the schema (if it doesn't exist yet) and loads the shared demo banking sandbox — checking/savings accounts, ~50 transactions each, bill pay payees, and friend pay contacts:
-   ```
-   npm run seed
-   ```
-
-4. **Start the app**
+3. **Start the app**
    ```
    npm run dev   # nodemon — auto-restarts on file changes (recommended for local dev)
    ```
@@ -70,21 +63,17 @@ Set these in Vercel under **Project Settings → Environment Variables**, or in 
    npm start     # plain node, no auto-restart
    ```
 
-5. Open your browser and go to **http://localhost:3000**. The admin panel is at **http://localhost:3000/admin**.
+4. Open your browser and go to **http://localhost:3000**.
 
 ### Logging in
 
 Login is deliberately frictionless — there's no real authentication:
 
-- Enter **any email address** on the Log In or Open an Account form. A new email auto-provisions a persona on the spot; an existing one logs back into it.
+- Enter **any email address** on the Log In or Open an Account form. Your identity (email and name) lives only in the signed session cookie — there's no user table, so logging in never touches the database. Loan applications are matched to you by email, so logging in again with the same email picks up your loans.
 - The password field is present for visual realism only — it's read and discarded, never checked or stored.
 - This means you can demo Contentsquare's `identify()` call live with any email typed on the spot, without needing to remember or share credentials.
 
-**Admin access** isn't reachable through the UI — every account is provisioned as `role = 'customer'`. To promote one for testing the admin dashboard and loan underwriting queue, flip it directly in the database, e.g. via `psql "$DATABASE_URL"`:
-```sql
-UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
-```
-Because this is a real shared Postgres database (not a per-instance file), the promotion is immediately visible everywhere — including on Vercel, across every serverless instance.
+There is no admin area. Applicants move their own loans through underwriting with the **Advance Underwriting Status** button on their loan page.
 
 ---
 
@@ -93,12 +82,12 @@ Because this is a real shared Postgres database (not a per-instance file), the p
 ```
 heapBank2/
 ├── config/          # Postgres pool + schema (database.js)
-├── lib/             # Domain logic: banking ops, loan state machine, demo data reset
-├── middleware/      # Session auth (loadUser/requireLogin/requireAdmin) + view locals
+├── lib/             # Domain logic: banking ops, bundled banking baseline, loan state machine
+├── middleware/      # Session auth (loadUser/requireLogin) + view locals
 ├── public/          # Static assets (CSS, logo)
-├── routes/          # Express route handlers (marketing, auth, banking, loans, admin/)
+├── routes/          # Express route handlers (marketing, auth, banking, loans)
 ├── scripts/
-│   └── seed.js      # Creates the schema (if needed) and seeds the shared demo banking sandbox
+│   └── seleniumScripts/  # Browser-driven demo traffic
 ├── views/           # EJS templates
 ├── server.js        # Express app entry point
 └── vercel.json      # Vercel deployment config
@@ -108,27 +97,24 @@ heapBank2/
 
 ## Demo data model
 
-- **Per-session banking overlay** — checking/savings balances, transactions, bill pay payees, and friend pay contacts are a shared, read-only seeded baseline (see `npm run seed`) plus whatever *this session itself* has added on top, tracked in the session cookie (`lib/banking.js`). Every session — a live demo login or an automated script — starts from the identical baseline; nothing one session adds is ever visible to any other session, so concurrent demos never interfere with each other.
-- **Loan applications are the one per-identity, persisted entity** — each user's loan applications live in Postgres, belong to them, and survive both kinds of reset below.
+- **Per-session banking overlay** — checking/savings balances, transactions, bill pay payees, and friend pay contacts are a shared, read-only baseline bundled in code (`lib/baseline.js`, generated deterministically with dates relative to today) plus whatever *this session itself* has added on top, tracked in the session cookie (`lib/banking.js`). Every session — a live demo login or an automated script — starts from the identical baseline; nothing one session adds is ever visible to any other session, so concurrent demos never interfere with each other.
+- **Loan applications are the one persisted entity** — they live in Postgres (`loans` and `loan_events`), are matched to a user by email, and survive logging out and clearing cookies.
 
 ### Resetting demo data
-
-Three different resets exist, for three different situations:
 
 | Action | Effect |
 |--------|--------|
 | `GET /demo/reset` | Clears just the current session (logs you out) — handy for typing a fresh email at `/login` without clearing cookies manually. |
-| `POST /demo/reset-data` (the **Reset Demo Banking Data** link in the footer, any logged-in user) | Clears *your own session's* banking overlay back to the shared starting point. Doesn't touch the shared baseline or anyone else's session. |
-| `POST /admin/reset-demo-data` (the **Reset Demo Data** button in `/admin`), or `npm run seed` | Re-seeds the shared, read-only banking baseline itself (accounts, transactions, payees, contacts) — e.g. to refresh its dates. Every session's own overlay keeps layering on top of the refreshed baseline. |
+| `POST /demo/reset-data` (the **Reset Demo Banking Data** link in the footer, any logged-in user) | Clears *your own session's* banking overlay back to the shared starting point. Doesn't touch anyone else's session. |
 
-Loan applications are untouched by all three.
+Loan applications are untouched by both.
 
 ## Loan / underwriting flow
 
-Applying for a loan (`/loans`) walks through a multi-step form, then moves through a status state machine that an admin advances manually from the admin loan queue (`/admin/loans`) — there's no real underwriting model, just a demo-friendly randomized outcome:
+Applying for a loan (`/loans`) walks through a multi-step form, then moves through a status state machine that the applicant advances with a demo control on their own loan page — there's no real underwriting model, just a demo-friendly randomized outcome:
 
 ```
 draft → submitted → under_review ⇄ docs_requested → docs_submitted → under_review → approved | denied
 ```
 
-Each transition is logged to `loan_application_events` and can fire a Contentsquare custom event via `_uxa` on the applicant's next page load (see `lib/trackEvent.js` and `middleware/locals.js`) — useful for demoing event tracking on state changes that happen out-of-band from the user's own actions.
+Each transition is logged to `loan_events` and can fire a Contentsquare custom event via `_uxa` on the applicant's next page load (see `lib/trackEvent.js` and `middleware/locals.js`) — useful for demoing event tracking on state changes that happen out-of-band from the user's own actions.
