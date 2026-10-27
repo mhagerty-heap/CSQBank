@@ -11,6 +11,16 @@ router.get('/signup', (req, res) => {
   res.render('marketing/signup', { title: 'Open an Account' });
 });
 
+// There's no user table to remember a name in, so when the form doesn't send
+// one (the Log In form has no name field) a readable display name is derived
+// from the email: carol.carpenter+demo@x.com -> "Carol Carpenter".
+function nameFromEmail(email) {
+  const local = email.split('@')[0].split('+')[0];
+  const words = local.split(/[._-]+/).map(w => w.replace(/\d+$/, '')).filter(Boolean);
+  if (!words.length) return local;
+  return words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 // Shared by both the marketing "Open an Account" form and the app "Log In"
 // form. Deliberately frictionless: any email logs in — a new email
 // auto-provisions a persona, an existing one logs back into it. The
@@ -27,7 +37,7 @@ router.post('/login', (req, res, next) => {
       return res.redirect(req.get('Referer') || '/login');
     }
 
-    const name = (req.body.name || '').trim() || email.split('@')[0];
+    const name = (req.body.name || '').trim() || nameFromEmail(email);
     req.session.user = { email, name };
     req.flash('success', `Welcome, ${name}!`);
     const returnTo = req.session.returnTo || '/';
