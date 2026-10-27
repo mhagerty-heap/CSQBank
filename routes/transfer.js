@@ -40,10 +40,14 @@ router.post('/', async (req, res, next) => {
 
     queueTrackEvent(req, 'Transfer Completed', { fromAccountType: from_account_type, toAccountType: to_account_type, amount });
     req.flash('success', `Transferred $${amount.toFixed(2)} from ${fromAccount.display_label} to ${toAccount.display_label}.`);
-    res.redirect('/transfer');
+    res.redirect('/transfer/complete');
   } catch (err) {
     next(err);
   }
+});
+
+router.get('/complete', (req, res) => {
+  res.render('transfer/complete', { title: 'Transfer Complete' });
 });
 
 module.exports = router;

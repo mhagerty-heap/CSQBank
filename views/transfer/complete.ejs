@@ -1,0 +1,12 @@
+<%- include('../partials/head') %>
+<%- include('../partials/app-nav') %>
+
+<div class="container py-5 text-center" style="max-width: 480px;">
+  <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+  <h2 class="mt-3">Transfer Complete</h2>
+  <%- include('../partials/flash') %>
+  <a href="/transfer" id="transfer-another-btn" class="btn btn-primary">Make Another Transfer</a>
+  <a href="/banking" id="transfer-back-btn" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
+
+<%- include('../partials/footer') %>

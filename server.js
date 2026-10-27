@@ -92,7 +92,7 @@ app.post('/demo/reset-data', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   req.session.bankingOverlay = null;
   req.flash('success', 'Your banking activity has been reset to the starting state.');
-  res.redirect(req.get('Referer') || '/');
+  res.redirect(req.get('Referer') || '/banking');
 });
 
 app.use((req, res) => {

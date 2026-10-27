@@ -86,8 +86,6 @@ heapBank2/
 ├── middleware/      # Session auth (loadUser/requireLogin) + view locals
 ├── public/          # Static assets (CSS, logo)
 ├── routes/          # Express route handlers (marketing, auth, banking, loans)
-├── scripts/
-│   └── seleniumScripts/  # Browser-driven demo traffic
 ├── views/           # EJS templates
 ├── server.js        # Express app entry point
 └── vercel.json      # Vercel deployment config

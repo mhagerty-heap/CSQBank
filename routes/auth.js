@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/login', (req, res) => {
-  if (req.session.user) return res.redirect('/');
+  if (req.session.user) return res.redirect('/banking');
   res.render('marketing/login', { title: 'Log In' });
 });
 
 router.get('/signup', (req, res) => {
-  if (req.session.user) return res.redirect('/');
+  if (req.session.user) return res.redirect('/banking');
   res.render('marketing/signup', { title: 'Open an Account' });
 });
 
@@ -40,7 +40,7 @@ router.post('/login', (req, res, next) => {
     const name = (req.body.name || '').trim() || nameFromEmail(email);
     req.session.user = { email, name };
     req.flash('success', `Welcome, ${name}!`);
-    const returnTo = req.session.returnTo || '/';
+    const returnTo = req.session.returnTo || '/banking';
     delete req.session.returnTo;
     res.redirect(returnTo);
   } catch (err) {

@@ -3,7 +3,7 @@ const router = express.Router();
 const { requireLogin } = require('../middleware/auth');
 const banking = require('../lib/banking');
 
-router.get('/', requireLogin, async (req, res, next) => {
+router.get('/banking', requireLogin, async (req, res, next) => {
   try {
     const accounts = await banking.listAccounts(req);
     const checking = accounts.find(a => a.account_type === 'checking');
