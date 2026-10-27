@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { requireLogin } = require('../middleware/auth');
 const banking = require('../lib/banking');
-const loans = require('../lib/loans');
 
 router.get('/', requireLogin, async (req, res, next) => {
   try {
@@ -10,10 +9,9 @@ router.get('/', requireLogin, async (req, res, next) => {
     const checking = accounts.find(a => a.account_type === 'checking');
     const savings = accounts.find(a => a.account_type === 'savings');
 
-    const [recentChecking, recentSavings, myLoans] = await Promise.all([
+    const [recentChecking, recentSavings] = await Promise.all([
       banking.listTransactions(req, checking, 5),
       banking.listTransactions(req, savings, 5),
-      loans.listForUser(req.session.userId),
     ]);
 
     res.render('dashboard', {
@@ -22,7 +20,6 @@ router.get('/', requireLogin, async (req, res, next) => {
       savings,
       recentChecking,
       recentSavings,
-      myLoans,
     });
   } catch (err) {
     next(err);

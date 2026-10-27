@@ -29,9 +29,6 @@
         <li class="nav-item"><a class="nav-link" id="nav-cat-transfer" href="/transfer">Transfers</a></li>
         <li class="nav-item"><a class="nav-link" id="nav-cat-friendpay" href="/friend-pay">Pay a Friend</a></li>
         <li class="nav-item"><a class="nav-link" id="nav-cat-loans" href="/loans">Loans</a></li>
-        <% if (currentUser && currentUser.role === 'admin') { %>
-          <li class="nav-item"><a class="nav-link" id="nav-admin" href="/admin">Admin</a></li>
-        <% } %>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" id="nav-user-menu" href="#" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle"></i> <%= currentUser.name %>

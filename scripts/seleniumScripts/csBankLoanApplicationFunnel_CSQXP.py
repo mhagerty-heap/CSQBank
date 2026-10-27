@@ -3,6 +3,7 @@ import time
 import json
 import random
 import datetime
+import urllib.request
 import psycopg2
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -24,7 +25,7 @@ from selenium.webdriver.support.ui import Select
 #
 # Meant to be run on a schedule (recommended: ~every 8 hours / 3x a day —
 # see project discussion). Every run does three things:
-#   1. Reads loan_applications directly from Postgres to see which of the
+#   1. Reads the loans table directly from Postgres to see which of the
 #      pool's personas currently need a bank-side nudge (this is
 #      orchestration, not a simulated user action, so there's no UI
 #      equivalent to click through for it).
@@ -33,7 +34,7 @@ from selenium.webdriver.support.ui import Select
 #      request, or starting a fresh application — so every actual state
 #      change and CSQ event still comes from the real app, never a DB
 #      shortcut.
-#   3. Sweeps stale loan_applications rows past their retention window.
+#   3. Sweeps stale loans rows past their retention window.
 # ---------------------------------------------------------------------------
 scriptRunTimestamp = datetime.datetime.now()
 print("[INIT] " + "=" * 60)
@@ -103,11 +104,10 @@ def fetch_pool_states(conn):
     with conn.cursor() as cur:
         cur.execute(
             """
-            SELECT DISTINCT ON (u.email) u.email, la.id, la.status, la.current_step
-            FROM users u
-            LEFT JOIN loan_applications la ON la.user_id = u.id
-            WHERE u.email = ANY(%s)
-            ORDER BY u.email, la.updated_at DESC NULLS LAST
+            SELECT DISTINCT ON (p.email) p.email, la.id, la.status, la.current_step
+            FROM unnest(%s::text[]) AS p(email)
+            LEFT JOIN loans la ON la.user_email = p.email
+            ORDER BY p.email, la.updated_at DESC NULLS LAST
             """,
             (poolEmails,),
         )
@@ -134,22 +134,22 @@ def plan_actions(rows):
 def run_cleanup(conn):
     with conn.cursor() as cur:
         cur.execute(
-            "DELETE FROM loan_applications WHERE status = 'draft' AND created_at < NOW() - INTERVAL '1 day' * %s",
+            "DELETE FROM loans WHERE status = 'draft' AND created_at < NOW() - INTERVAL '1 day' * %s",
             (RETENTION_DRAFT_DAYS,),
         )
         draftDeleted = cur.rowcount
         cur.execute(
-            "DELETE FROM loan_applications WHERE status = 'docs_requested' AND updated_at < NOW() - INTERVAL '1 day' * %s",
+            "DELETE FROM loans WHERE status = 'docs_requested' AND updated_at < NOW() - INTERVAL '1 day' * %s",
             (RETENTION_DOCS_REQUESTED_DAYS,),
         )
         docsDeleted = cur.rowcount
         cur.execute(
-            "DELETE FROM loan_applications WHERE status IN ('submitted', 'under_review', 'docs_submitted') AND updated_at < NOW() - INTERVAL '1 day' * %s",
+            "DELETE FROM loans WHERE status IN ('submitted', 'under_review', 'docs_submitted') AND updated_at < NOW() - INTERVAL '1 day' * %s",
             (RETENTION_IN_FLIGHT_DAYS,),
         )
         inFlightDeleted = cur.rowcount
         cur.execute(
-            "DELETE FROM loan_applications WHERE status IN ('approved', 'denied') AND decided_at < NOW() - INTERVAL '1 day' * %s",
+            "DELETE FROM loans WHERE status IN ('approved', 'denied') AND decided_at < NOW() - INTERVAL '1 day' * %s",
             (RETENTION_RESOLVED_DAYS,),
         )
         resolvedDeleted = cur.rowcount
@@ -409,6 +409,18 @@ def run_persona_action(item):
 # ---------------------------------------------------------------------------
 # [MAIN]
 # ---------------------------------------------------------------------------
+def warm_site():
+    """The app only creates its loan tables (and wakes Neon) when something
+    under /loans or /warm touches the database, so hit /warm first. That
+    guarantees the `loans` table exists before the queries below run."""
+    try:
+        with urllib.request.urlopen(siteBaseUrl + "/warm", timeout=90) as resp:
+            log("WARM", "GET /warm -> " + str(resp.status))
+    except Exception as err:
+        log("WARM", "GET /warm failed (" + str(err) + ") — continuing, queries below may fail if the loans table doesn't exist yet")
+
+
+warm_site()
 conn = db_connect()
 try:
     rows = fetch_pool_states(conn)

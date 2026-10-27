@@ -4,7 +4,7 @@ const router = express.Router();
 // Logged-out visitors see the marketing home page; logged-in users fall
 // through to routes/index.js's dashboard handler for the same '/' path.
 router.get('/', (req, res, next) => {
-  if (req.session.userId) return next();
+  if (req.session.user) return next();
   res.render('marketing/home');
 });
 
