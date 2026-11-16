@@ -8,6 +8,8 @@ module.exports = function injectLocals(req, res, next) {
   res.locals.pendingTrackEvent = req.session.pendingTrackEvent || null;
   delete req.session.pendingTrackEvent;
 
+  res.locals.assistantDefaultSlug = require('../lib/assistantScenarios').defaultSlug;
+
   res.locals.flash = {
     success: req.flash ? req.flash('success') : [],
     error: req.flash ? req.flash('error') : [],

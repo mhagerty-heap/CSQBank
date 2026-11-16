@@ -1,0 +1,30 @@
+<%- include('../partials/head') %>
+<% if (typeof currentUser !== 'undefined' && currentUser) { %>
+  <%- include('../partials/app-nav') %>
+<% } else { %>
+  <%- include('../partials/marketing-nav') %>
+<% } %>
+
+<div class="container py-4" style="max-width: 1100px;">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h2 class="mb-0">Assistant Scenarios</h2>
+    <div class="d-flex flex-wrap gap-2" id="aa-toolbar">
+      <button class="btn btn-sm btn-primary" data-action="new" id="aa-new">+ New scenario</button>
+      <button class="btn btn-sm btn-outline-secondary" data-action="import" id="aa-import">Import JSON</button>
+      <button class="btn btn-sm btn-outline-secondary" data-action="export-all" id="aa-export-all">Export all local</button>
+      <button class="btn btn-sm btn-outline-danger" data-action="clear-local" id="aa-clear-local">Clear local</button>
+      <input type="file" id="aa-file" accept="application/json,.json" style="display:none">
+    </div>
+  </div>
+  <p class="text-muted small mb-3">
+    Scenarios you create here are saved in <strong>this browser only</strong> and work immediately.
+    To make one permanent for everyone, use <em>Export</em> and send the JSON file to be added to
+    <code>data/scenarios.json</code>. A local scenario with the same slug as a baseline one overrides it in this browser.
+  </p>
+
+  <div id="aa-message"></div>
+  <div id="aa-root"><div class="text-muted">Loading…</div></div>
+</div>
+
+<%- include('../partials/footer') %>
+<script src="/js/assistant-admin.js"></script>

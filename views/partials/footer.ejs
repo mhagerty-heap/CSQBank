@@ -45,7 +45,12 @@
   </div>
 </footer>
 
+<button type="button" id="assistant-bubble" class="assistant-bubble" style="display:none;" aria-label="Open CSQBank Assistant" data-default-scenario="<%= typeof assistantDefaultSlug !== 'undefined' ? assistantDefaultSlug : '' %>">
+  <i class="bi bi-chat-dots-fill"></i>
+</button>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/assistant.js"></script>
 <script>
 (function() {
   // Fires identify() on any form submission carrying an email address —
