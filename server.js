@@ -76,6 +76,7 @@ app.use('/friend-pay', require('./routes/friendpay'));
 app.use('/credit-card-offer', require('./routes/creditcard'));
 app.use('/loans', require('./routes/loans'));
 app.use('/api', require('./routes/demoErrors'));
+app.use('/', require('./routes/assistant'));
 
 // Demo reset — clears the session so a fresh email can be typed at /login
 app.get('/demo/reset', (req, res) => {

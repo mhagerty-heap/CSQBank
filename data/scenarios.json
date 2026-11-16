@@ -1,0 +1,108 @@
+{
+  "defaultSlug": "loan-application-status",
+  "scenarios": [
+    {
+      "version": 1,
+      "slug": "loan-application-status",
+      "name": "CSQBank Assistant",
+      "driver": { "l1": "Lending and Credit", "l2": "Personal and Auto Loans", "l3": "Loan Application Status" },
+      "greeting": "Hi, I'm the CSQBank Assistant. How can I help you today?",
+      "completionText": "Thanks for your message. For anything else, you can [schedule a meeting](/schedule-a-meeting) with a representative.",
+      "steps": [
+        {
+          "mode": "free_text",
+          "response": "I can help with that. Is this about a loan application you've already submitted?",
+          "typingDelayMs": 1200,
+          "chips": []
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1400,
+          "chips": [
+            { "label": "Yes, it's still in review", "response": "Thanks. Submitted applications usually move through underwriting in a day or two. If the underwriter needs more from you, the status changes to Documents Requested and you can respond from the loan page. You can check yours any time on [your loans page](/loans). Anything else I can help with?", "next": 2 },
+            { "label": "No, I haven't submitted it", "response": "No problem. You can [pick up your application](/loans) where you left off, or [start a new one](/loans/new). Drafts are saved automatically.", "next": null }
+          ]
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1200,
+          "chips": [
+            { "label": "What documents might I need?", "response": "Usually proof of income, such as recent pay stubs, and a government ID. If we need something, you'll see a request on your loan page and can respond right there. Anything else?", "next": 2 },
+            { "label": "I'd like to talk to someone", "response": "Of course. You can [schedule a meeting](/schedule-a-meeting) with a loan specialist.", "next": null },
+            { "label": "That's all, thanks", "response": "You're welcome! Have a great day.", "next": null }
+          ]
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "slug": "money-transfer-issue",
+      "name": "CSQBank Assistant",
+      "driver": { "l1": "Money Movement", "l2": "Transfers and Payments", "l3": "Money Transfer Issue" },
+      "greeting": "Hi, I'm the CSQBank Assistant. How can I help you today?",
+      "completionText": "Thanks for your message. For anything else, you can [schedule a meeting](/schedule-a-meeting) with a representative.",
+      "steps": [
+        {
+          "mode": "free_text",
+          "response": "I'm sorry about that. Let's get your transfer sorted out. Which kind of transfer were you trying to make?",
+          "typingDelayMs": 1200,
+          "chips": []
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1400,
+          "chips": [
+            { "label": "Between my checking and savings", "response": "Transfers between your own accounts normally post right away. If you saw an error, our transfer service may be having a temporary issue. Please wait a few minutes and [try the transfer again](/transfer). A failed attempt doesn't change your balances. Did that help?", "next": 2 },
+            { "label": "To an external bank", "response": "External ACH transfers typically take 1 to 3 business days. If yours is later than that, a specialist can trace it. [Schedule a meeting](/schedule-a-meeting) and we'll take a look.", "next": null }
+          ]
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1200,
+          "chips": [
+            { "label": "It still isn't working", "response": "Thanks for letting me know. I've flagged the problem for our support team. You can also [schedule a callback](/schedule-a-meeting) and a representative will follow up.", "next": null },
+            { "label": "That worked, thanks", "response": "Glad to hear it!", "next": null }
+          ]
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "slug": "account-access-issue",
+      "name": "CSQBank Assistant",
+      "driver": { "l1": "Account Management", "l2": "Sign-in", "l3": "Account Access Issue" },
+      "greeting": "Hi, I'm the CSQBank Assistant. How can I help you today?",
+      "completionText": "Thanks for your message. For anything else, you can [schedule a meeting](/schedule-a-meeting) with a representative.",
+      "steps": [
+        {
+          "mode": "free_text",
+          "response": "I'm sorry you're having trouble getting in. What happens when you try to sign in?",
+          "typingDelayMs": 1200,
+          "chips": []
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1300,
+          "chips": [
+            { "label": "It rejects my email", "response": "Please check the address for typos, then try again on the [login page](/login). If you don't have an account yet, you can [open one in a couple of minutes](/signup). Are you back in?", "next": 2 },
+            { "label": "My account seems locked", "response": "For your security, accounts lock after several failed attempts. Locks lift automatically after 30 minutes, or a representative can help sooner. [Schedule a callback](/schedule-a-meeting) and we'll get you back in.", "next": null }
+          ]
+        },
+        {
+          "mode": "chips",
+          "response": "",
+          "typingDelayMs": 1200,
+          "chips": [
+            { "label": "That didn't help", "response": "I'm sorry. Let me get you to a person: [schedule a callback](/schedule-a-meeting) and a representative will follow up.", "next": null },
+            { "label": "I'm back in, thanks", "response": "Great, glad you're in!", "next": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

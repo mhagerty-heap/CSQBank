@@ -116,3 +116,11 @@ draft → submitted → under_review ⇄ docs_requested → docs_submitted → u
 ```
 
 Each transition is logged to `loan_events` and can fire a Contentsquare custom event via `_uxa` on the applicant's next page load (see `lib/trackEvent.js` and `middleware/locals.js`) — useful for demoing event tracking on state changes that happen out-of-band from the user's own actions.
+
+## Assistant (scripted chat bubble)
+
+A floating chat bubble on every page, fully canned (no LLM). Each scenario is an ordered list of steps (`free_text` or `chips`) tagged with a contact driver (L1 › L2 › L3); the driver is sent to Contentsquare as the `Assistant Opened`, `Assistant Contact Reason` and `Assistant Chip Clicked` events plus `contact_reason_l1/l2/l3` dynamic variables.
+
+- `?aiScenario=<slug>` picks a scenario for the tab; `?aiScenario=assistant-off` hides the bubble.
+- Every contact driver in `lib/contactDrivers.js` has a slug (e.g. `card-lock`). Hand-written scenarios live in `data/scenarios.json`; any driver without one plays a generated stub (`lib/assistantScenarios.js`).
+- `/admin/assistant` (no login) authors scenarios into this browser's localStorage. To make one permanent: **Export** its JSON, then add it to `data/scenarios.json` and deploy.
