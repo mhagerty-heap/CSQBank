@@ -4,7 +4,8 @@
 //   - scenarios resolve from localStorage first (authored in /admin/assistant),
 //     then from the server baseline (/assistant/scenario/:slug)
 //   - every scenario carries a contact driver (L1/L2/L3), reported to
-//     Contentsquare via trackEvent + dynamic variables
+//     Contentsquare/Heap via _uxa trackEvent properties (Title Case names,
+//     matching ecommerce-main's convention)
 //
 // Scenario slug resolution order:
 //   1. ?aiScenario=<slug> (persisted in sessionStorage for the tab)
@@ -55,10 +56,6 @@
     window._uxa = window._uxa || [];
     window._uxa.push(['trackEvent', { name: name, properties: props }]);
   }
-  function csqDynVar(key, value) {
-    window._uxa = window._uxa || [];
-    window._uxa.push(['trackDynamicVariable', { key: key, value: value }]);
-  }
 
   function init(scenario) {
     bubble.style.display = '';
@@ -70,10 +67,10 @@
 
     function baseProps(extra) {
       var p = {
-        scenario: scenario.slug,
-        contact_reason_l1: driver.l1 || '',
-        contact_reason_l2: driver.l2 || '',
-        contact_reason_l3: driver.l3 || ''
+        'Scenario': scenario.slug,
+        'Contact Reason L1': driver.l1 || '',
+        'Contact Reason L2': driver.l2 || '',
+        'Contact Reason L3': driver.l3 || ''
       };
       for (var k in extra) p[k] = extra[k];
       return p;
@@ -83,10 +80,7 @@
     function reportReason(source) {
       if (reasonSent || !driver.l3) return;
       reasonSent = true;
-      csqDynVar('contact_reason_l1', driver.l1);
-      csqDynVar('contact_reason_l2', driver.l2);
-      csqDynVar('contact_reason_l3', driver.l3);
-      csqEvent('Assistant Contact Reason', baseProps({ source: source }));
+      csqEvent('Assistant Contact Reason', baseProps({ 'Source': source }));
     }
 
     function saveState() {
@@ -289,7 +283,7 @@
     function handleChip(chip) {
       appendBubble(chip.label, 'user');
       reportReason('chip');
-      csqEvent('Assistant Chip Clicked', baseProps({ chip_label: chip.label }));
+      csqEvent('Assistant Chip Clicked', baseProps({ 'Chip Label': chip.label }));
       chipsFooter.style.display = 'none';
       var step = currentStep();
       showTypingThen(step.typingDelayMs, function () {
